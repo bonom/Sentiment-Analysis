@@ -1,5 +1,4 @@
-import copy
-import nltk
+import os
 from sklearn.metrics import accuracy_score, f1_score
 import torch
 import numpy as np
@@ -53,10 +52,11 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
 
     # Check if model is already trained, if so, load it and skip training
-    try:
-        model.load_state_dict(torch.load('models/subjectivity_classification.pt'))
+    if os.path.isdir('weights') and os.path.isfile('weights/model.pt'):
+        model.load('weights/model.pt')
         print(f"[WARNING] Model already trained, skipping training")
-    except FileNotFoundError:
+    else:
+        os.makedirs('weights', exist_ok=True)
         print(f"[WARNING] Model not trained, training it now")
         # Create variables to store the best model
         cum_loss = []
@@ -102,7 +102,7 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
             tqdm_bar.set_description(f"Epoch {epoch+1}/{epochs} - Loss: {loss.item():.3f} - Accuracy: {acc:.3f} - F1: {f1:.3f}")
         
         # Save the model
-        torch.save(model.state_dict(), "model.pt")
+        model.save('weights/model.pt')
 
         # Plot loss, accuracy and f1 score
         plot_data(cum_loss, cum_acc, cum_f1, title="Train set")
