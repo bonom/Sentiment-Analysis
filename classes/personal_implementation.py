@@ -13,6 +13,14 @@ from classes.dataset import CustomDataset
 
 from classes.model import LSTM
 
+WEIGHTS_PATH = os.path.join(os.path.dirname(__file__), 'weights', 'custom_implementation')
+WEIGHTS_PATH_SUBJECTIVITY = os.path.join(WEIGHTS_PATH, 'subjectivity_classification.pt')
+WEIGHTS_PATH_POLARITY = os.path.join(WEIGHTS_PATH, 'polarity_classification.pt')
+
+PLOTS_PATH = os.path.join(os.path.dirname(__file__), 'plots', 'custom_implementation')
+PLOTS_PATH_SUBJECTIVITY = os.path.join(PLOTS_PATH, 'subjectivity_train_loss_accuracy_f1.png')
+PLOTS_PATH_POLARITY = os.path.join(PLOTS_PATH, 'polarity_train_loss_accuracy_f1.png')
+
 def train_subjectivity_classification(epochs:int = 40, lr:float = 0.001, weight_decay:float = 0.0001, device:str = 'cpu') -> nn.Module:
     """
     Do subjectivity classification using a custom classifier.
@@ -48,11 +56,11 @@ def train_subjectivity_classification(epochs:int = 40, lr:float = 0.001, weight_
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
 
     # Check if model is already trained, if so, load it and skip training
-    if os.path.isdir('weights') and os.path.isfile('weights/subjectivity_classifier.pt'):
-        model.load('weights/subjectivity_classifier.pt')
+    if os.path.isfile(WEIGHTS_PATH_SUBJECTIVITY):
+        model.load(WEIGHTS_PATH_SUBJECTIVITY)
         print(f"[SUBJECTIVITY] Model already trained, skipping training")
     else:
-        os.makedirs('weights', exist_ok=True)
+        os.makedirs(WEIGHTS_PATH, exist_ok=True)
         print(f"[SUBJECTIVITY] Model not trained, training it now")
         # Create variables to store the best model
         cum_loss = []
@@ -99,7 +107,7 @@ def train_subjectivity_classification(epochs:int = 40, lr:float = 0.001, weight_
         model.save('weights/subjectivity_classifier.pt')
 
         # Plot loss, accuracy and f1 score
-        plot_data(cum_loss, cum_acc, cum_f1, title="Subjectivity train results", save_path="plots/subjectivity_train_results.png")
+        plot_data(cum_loss, cum_acc, cum_f1, title="Subjectivity train results", save_path=PLOTS_PATH_SUBJECTIVITY)
 
     # Test
     model.eval()
@@ -162,8 +170,8 @@ def train_polarity_classification(epochs: int = 5, lr: float = 0.001, weight_dec
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
 
     # Check if model is already trained, if so, load it and skip training
-    if os.path.isdir('weights') and os.path.isfile('weights/polarity_classifier.pt'):
-        model.load('weights/polarity_classifier.pt')
+    if os.path.isdir('weights') and os.path.isfile(WEIGHTS_PATH_POLARITY):
+        model.load(WEIGHTS_PATH_POLARITY)
         print(f"[POLARITY] Model already trained, skipping training")
     else:
         print(f"[POLARITY] Model not trained, training it now")
@@ -211,10 +219,10 @@ def train_polarity_classification(epochs: int = 5, lr: float = 0.001, weight_dec
             tqdm_bar.set_description(f"[POLARITY] Epoch {epoch+1}/{epochs} - Loss: {loss.item():.3f} - Accuracy: {acc:.3f} - F1: {f1:.3f}")
 
         # Save the model
-        model.save('weights/polarity_classifier.pt')
+        model.save(WEIGHTS_PATH_POLARITY)
 
         # Plot loss, accuracy and f1 score
-        plot_data(cum_loss, cum_acc, cum_f1, title="Poplarity train results", save_path="plots/polarity_train_set")
+        plot_data(cum_loss, cum_acc, cum_f1, title="Poplarity train results", save_path=PLOTS_PATH_POLARITY)
 
     # Test
     model.eval()
