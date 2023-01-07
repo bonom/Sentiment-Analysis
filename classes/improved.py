@@ -78,7 +78,7 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
             optimizer.step()
 
             # y_pred can be a list of floats, so we need to round them to get accuracy and f1 score
-            y_pred = torch.round(torch.sigmoid(y_pred)).detach().numpy()
+            y_pred = torch.round(torch.sigmoid(y_pred)).cpu().detach().numpy()
             
             # Compute accuracy and f1 score
             acc = accuracy_score(y, y_pred)
