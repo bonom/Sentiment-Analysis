@@ -167,7 +167,7 @@ def train_polarity_classification(epochs: int = 10, lr: float = 0.001, weight_de
     test_loader = DataLoader(test_set, batch_size=32, shuffle=True, collate_fn=collate_fn)
     
     # Create a custom classifier
-    model = LSTM(input_size=len(word2index), emb_size=64, hidden_size=64, output_size=1).to(device)
+    model = LSTM(input_size=len(word2index), emb_size=128, hidden_size=128, output_size=1).to(device)
     # model = BiLSTM_CNN_Attention(vocab_size=len(word2index), emb_dim=100, lstm_hidden_dim=128, lstm_num_layers=1, cnn_num_filters=2, cnn_filter_sizes=(256, 256), num_classes=2)
     criterion = torch.nn.BCEWithLogitsLoss().to(device)
     # criterion = torch.nn.MSELoss()
