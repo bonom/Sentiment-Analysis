@@ -36,7 +36,7 @@ def check_downloads():
 from sklearn.model_selection import StratifiedKFold
 
 def create_dataset(data, labels):
-    kfold = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
+    kfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
     for train_index, test_index in kfold.split(data, labels):
         train_set_x, test_set_x = [data[i] for i in train_index], [data[i] for i in test_index]
         train_set_y, test_set_y = [labels[i] for i in train_index], [labels[i] for i in test_index]
