@@ -1,3 +1,4 @@
+import os
 import torch
 from typing import List
 import nltk
@@ -70,7 +71,7 @@ def collate_fn(batch):
 
     return sentences, labels, torch.stack([torch.tensor(l) for l in lengths])
 
-def plot_data(loss, accuracy, f1_score, title="Loss, Accuracy & F1 Score"):
+def plot_data(loss, accuracy, f1_score, title="Loss, Accuracy & F1 Score", save_path:str=None):
     plt.close('all')
     _, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
     ax1.plot(np.arange(len(loss)), loss)
@@ -86,7 +87,13 @@ def plot_data(loss, accuracy, f1_score, title="Loss, Accuracy & F1 Score"):
     ax2.legend()
 
     plt.suptitle(title)
-    plt.show()
+    if save_path is not None:
+        parent = os.path.dirname(save_path)
+        if not os.path.exists(parent):
+            os.makedirs(parent)
+        plt.savefig(save_path)
+    else:
+        plt.show()
 
 from nltk.stem import PorterStemmer
 
@@ -102,8 +109,13 @@ def create_word_2_index(sentences):
     word2index = {}
     for sentence in sentences:
         for word in sentence:
-            if word not in word2index:
-                word2index[word] = len(word2index)
+            if isinstance(word, list):
+                for w in word:
+                    if w not in word2index:
+                        word2index[w] = len(word2index)
+            else:
+                if word not in word2index:
+                    word2index[word] = len(word2index)
     word2index["<UNK>"] = len(word2index)
 
     return word2index

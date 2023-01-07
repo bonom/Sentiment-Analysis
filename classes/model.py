@@ -44,7 +44,7 @@ class Attention(nn.Module):
         return x
 
 class LSTM(nn.Module):
-    def __init__(self, input_size:int, hidden_size:int, emb_size:int, output_size:int = 1, n_layers:int = 2, padding_idx:int = 0, dropout_pr:float = 0.5):
+    def __init__(self, input_size:int, hidden_size:int, emb_size:int, output_size:int = 1, n_layers:int = 2, padding_idx:int = 0, dropout_pr:float = 0.5) -> None:
         super(LSTM, self).__init__()
         self.n_layers = n_layers
         self.hidden_size = hidden_size
@@ -66,7 +66,7 @@ class LSTM(nn.Module):
         # Then we need a classifier layer to convert our LSTM output to our desired output size
         self.out = nn.Linear(hidden_size * 2, output_size)
 
-    def forward(self, x, lengths):
+    def forward(self, x, lengths) -> torch.Tensor:
         # Embedding layer
         x = self.embedding(x)
         x = pack_padded_sequence(x, lengths, batch_first=True)
@@ -89,10 +89,14 @@ class LSTM(nn.Module):
 
         return x
     
-    def save(self, path:str):
+    def save(self, path:str) -> None:
         print(f"Saving model to '{os.path.abspath(path)}'")
         torch.save(self.state_dict(), path)
     
-    def load(self, path:str):
+    def load(self, path:str) -> None:
         print(f"Loading model from '{os.path.abspath(path)}'")
-        self.load_state_dict(torch.load(path))
+        try:
+            self.load_state_dict(torch.load(path))
+        except RuntimeError:
+            print("[WARNING] Model architecture does not match, loading only weights")
+            self.load_state_dict(torch.load(path, map_location=torch.device('cpu')))
