@@ -17,8 +17,6 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
     """
     Do subjectivity classification using a custom classifier.
     """    
-    if torch.cuda.is_available():
-        torch.cuda.empty_cache()
     # Get subjectivity and objectivity data
     obj = subjectivity.sents(categories='obj')
     subj = subjectivity.sents(categories='subj')
@@ -41,8 +39,8 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
     test_set = CustomDataset(test_set_x, test_set_y)
     
     # Make DataLoader
-    train_loader = DataLoader(train_set, batch_size=1024, shuffle=True, collate_fn=collate_fn)
-    test_loader = DataLoader(test_set, batch_size=1024, shuffle=True, collate_fn=collate_fn)
+    train_loader = DataLoader(train_set, batch_size=4096, shuffle=True, collate_fn=collate_fn)
+    test_loader = DataLoader(test_set, batch_size=4096, shuffle=True, collate_fn=collate_fn)
     
     # Create a custom classifier
     model = LSTM(input_size=len(word2index), emb_size=128, hidden_size=128, output_size=1).to(device)
@@ -133,8 +131,6 @@ def train_polarity_classification(epochs: int = 10, lr: float = 0.001, weight_de
     """
     Do polarity classification using a trained classifier.
     """
-    if torch.cuda.is_available():
-        torch.cuda.empty_cache()
     # Get positive and negative data
     neg = movie_reviews.paras(categories='neg')
     pos = movie_reviews.paras(categories='pos')
@@ -163,8 +159,8 @@ def train_polarity_classification(epochs: int = 10, lr: float = 0.001, weight_de
     test_set = CustomDataset(test_set_x, test_set_y)
     
     # Make DataLoader
-    train_loader = DataLoader(train_set, batch_size=4096, shuffle=True, collate_fn=collate_fn)
-    test_loader = DataLoader(test_set, batch_size=4096, shuffle=True, collate_fn=collate_fn)
+    train_loader = DataLoader(train_set, batch_size=16, shuffle=True, collate_fn=collate_fn)
+    test_loader = DataLoader(test_set, batch_size=16, shuffle=True, collate_fn=collate_fn)
     
     # Create a custom classifier
     model = LSTM(input_size=len(word2index), emb_size=128, hidden_size=128, output_size=1).to(device)
@@ -205,9 +201,11 @@ def train_polarity_classification(epochs: int = 10, lr: float = 0.001, weight_de
                 loss.backward()
                 optimizer.step()
 
+                x = x.cpu().detach().numpy()
+                y = y.cpu().detach().numpy()
+
             # y_pred can be a list of floats, so we need to round them to get accuracy and f1 score and convert them to numpy
             y_pred = torch.round(torch.sigmoid(y_pred)).cpu().detach().numpy()
-            y = y.cpu().detach().numpy()
 
             # Compute accuracy and f1 score
             acc = accuracy_score(y, y_pred)
