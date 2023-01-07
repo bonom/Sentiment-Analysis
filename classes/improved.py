@@ -163,8 +163,8 @@ def train_polarity_classification(epochs: int = 10, lr: float = 0.001, weight_de
     test_set = CustomDataset(test_set_x, test_set_y)
     
     # Make DataLoader
-    train_loader = DataLoader(train_set, batch_size=128, shuffle=True, collate_fn=collate_fn)
-    test_loader = DataLoader(test_set, batch_size=128, shuffle=True, collate_fn=collate_fn)
+    train_loader = DataLoader(train_set, batch_size=16, shuffle=True, collate_fn=collate_fn)
+    test_loader = DataLoader(test_set, batch_size=16, shuffle=True, collate_fn=collate_fn)
     
     # Create a custom classifier
     model = LSTM(input_size=len(word2index), emb_size=128, hidden_size=128, output_size=1).to(device)
