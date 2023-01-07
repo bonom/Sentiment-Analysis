@@ -17,6 +17,8 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
     """
     Do subjectivity classification using a custom classifier.
     """    
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
     # Get subjectivity and objectivity data
     obj = subjectivity.sents(categories='obj')
     subj = subjectivity.sents(categories='subj')
@@ -131,6 +133,8 @@ def train_polarity_classification(epochs: int = 10, lr: float = 0.001, weight_de
     """
     Do polarity classification using a trained classifier.
     """
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
     # Get positive and negative data
     neg = movie_reviews.paras(categories='neg')
     pos = movie_reviews.paras(categories='pos')
