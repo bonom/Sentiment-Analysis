@@ -39,8 +39,8 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
     test_set = CustomDataset(test_set_x, test_set_y)
     
     # Make DataLoader
-    train_loader = DataLoader(train_set, batch_size=4096, shuffle=True, collate_fn=collate_fn)
-    test_loader = DataLoader(test_set, batch_size=4096, shuffle=True, collate_fn=collate_fn)
+    train_loader = DataLoader(train_set, batch_size=2048, shuffle=True, collate_fn=collate_fn)
+    test_loader = DataLoader(test_set, batch_size=2048, shuffle=True, collate_fn=collate_fn)
     
     # Create a custom classifier
     model = LSTM(input_size=len(word2index), emb_size=128, hidden_size=128, output_size=1).to(device)
