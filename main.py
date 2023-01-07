@@ -13,4 +13,4 @@ if __name__ == '__main__':
 
     ### Custom classifiers
     print(f"--- Running custom classifiers ---")
-    train_subjectivity_classification(20, 0.001, 0.0001, 'cpu' if not torch.cuda.is_available() else 'cuda:0')
+    train_subjectivity_classification(100, 0.001, 0.0001, 'cpu' if not torch.cuda.is_available() else 'cuda:0')
