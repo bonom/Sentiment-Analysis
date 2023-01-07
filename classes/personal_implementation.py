@@ -13,11 +13,11 @@ from classes.dataset import CustomDataset
 
 from classes.model import LSTM
 
-WEIGHTS_PATH = os.path.join(os.path.dirname(__file__), 'weights', 'custom_implementation')
+WEIGHTS_PATH = os.path.join('weights', 'custom_implementation')
 WEIGHTS_PATH_SUBJECTIVITY = os.path.join(WEIGHTS_PATH, 'subjectivity_classification.pt')
 WEIGHTS_PATH_POLARITY = os.path.join(WEIGHTS_PATH, 'polarity_classification.pt')
 
-PLOTS_PATH = os.path.join(os.path.dirname(__file__), 'plots', 'custom_implementation')
+PLOTS_PATH = os.path.join('plots', 'custom_implementation')
 PLOTS_PATH_SUBJECTIVITY = os.path.join(PLOTS_PATH, 'subjectivity_train_loss_accuracy_f1.png')
 PLOTS_PATH_POLARITY = os.path.join(PLOTS_PATH, 'polarity_train_loss_accuracy_f1.png')
 
@@ -242,6 +242,6 @@ def train_polarity_classification(epochs: int = 5, lr: float = 0.001, weight_dec
             f1 = f1_score(y, y_pred)
     
     # Print results
-    print(f"[POLARITY] Achieved accuracy: {acc:.3f}\nAchieved f1 score: {f1:.3f}")
+    print(f"[POLARITY] Achieved accuracy: {acc:.3f}\n[POLARITY] Achieved f1 score: {f1:.3f}")
 
     return model

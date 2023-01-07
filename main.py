@@ -19,15 +19,15 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # Train subjectivity classifier with custom implementation
-    subj_class = train_subjectivity_classification(device=device)
+    # subj_class = train_subjectivity_classification(device=device)
 
     # Train polarity classifier with custom implementation
-    pol_class = train_polarity_classification(epochs=5, device=device)
+    # pol_class = train_polarity_classification(epochs=5, device=device)
 
     # Train subjectivity classifier with custom implementation
-    # subj_class = train_subjectivity_classification_paper(device=device)
+    subj_class = train_subjectivity_classification_paper(device=device)
 
     # Train polarity classifier with custom implementation
-    # pol_class = train_polarity_classification_paper(device=device)
+    pol_class = train_polarity_classification_paper(device=device)
 
     

@@ -18,11 +18,19 @@ class BiLSTM_CNN_Attention(nn.Module):
         x = pack_padded_sequence(x, lengths, batch_first=True)
 
         # LSTM layer
-        x, _ = self.memory(x)
+        x, _ = self.lstm(x)
         x, _ = pad_packed_sequence(x, batch_first=True)
 
+        # Shape is 4096, _, 256 but needed is 4096, 256, _
+        # So we need to transpose the last two dimensions
+        x = x.transpose(1, 2)    
+        
         # CNN layer
-        x = torch.cat([nn.functional.relu(conv(x)) for conv in self.cnn], dim=1)
+        temp = []
+        for conv in self.cnn:
+            temp.append(nn.functional.relu(conv(x)))
+        x = torch.cat(temp, dim=1)
+        # x = torch.cat([nn.functional.relu(conv(x)) for conv in self.cnn], dim=1)
         
         # Attention layer
         x = x * self.attention(x)
