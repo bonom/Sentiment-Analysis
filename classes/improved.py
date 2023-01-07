@@ -52,57 +52,61 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
     # criterion = torch.nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
 
-    # Create variables to store the best model
-    cum_loss = []
-    cum_acc = []
-    cum_f1 = []
+    # Check if model is already trained, if so, load it and skip training
+    try:
+        model.load_state_dict(torch.load('models/subjectivity_classification.pt'))
+        print(f"[WARNING] Model already trained, skipping training")
+    except FileNotFoundError:
+        print(f"[WARNING] Model not trained, training it now")
+        # Create variables to store the best model
+        cum_loss = []
+        cum_acc = []
+        cum_f1 = []
 
-    # Train the model
-    tqdm_bar = tqdm(range(epochs), desc=f"Epoch 0/{epochs} - Loss: {np.inf} - Accuracy: {-np.inf} - F1: {-np.inf}")
-    for epoch in tqdm_bar:
-        # Train
-        model.train()
-        for x, y, l in train_loader:  
-            # Move to GPU
-            x = x.to(device)
-            y = y.to(device)
-            
-            # Clear gradients          
-            optimizer.zero_grad()
+        # Train the model
+        tqdm_bar = tqdm(range(epochs), desc=f"Epoch 0/{epochs} - Loss: {np.inf} - Accuracy: {-np.inf} - F1: {-np.inf}")
+        for epoch in tqdm_bar:
+            # Train
+            model.train()
+            for x, y, l in train_loader:  
+                # Move to GPU
+                x = x.to(device)
+                y = y.to(device)
+                
+                # Clear gradients          
+                optimizer.zero_grad()
 
-            # Forward propagation
-            y_pred = model(x, l)
+                # Forward propagation
+                y_pred = model(x, l)
 
-            # Compute loss and backpropagate
-            loss = criterion(y_pred, y)
-            loss.backward()
-            optimizer.step()
+                # Compute loss and backpropagate
+                loss = criterion(y_pred, y)
+                loss.backward()
+                optimizer.step()
 
-        # y_pred can be a list of floats, so we need to round them to get accuracy and f1 score and convert them to numpy
-        y_pred = torch.round(torch.sigmoid(y_pred)).cpu().detach().numpy()
-        y = y.cpu().detach().numpy()
+            # y_pred can be a list of floats, so we need to round them to get accuracy and f1 score and convert them to numpy
+            y_pred = torch.round(torch.sigmoid(y_pred)).cpu().detach().numpy()
+            y = y.cpu().detach().numpy()
 
-        # Compute accuracy and f1 score
-        acc = accuracy_score(y, y_pred)
-        f1 = f1_score(y, y_pred)
+            # Compute accuracy and f1 score
+            acc = accuracy_score(y, y_pred)
+            f1 = f1_score(y, y_pred)
 
-        # Store loss, accuracy and f1 score for plotting
-        cum_loss.append(loss.item())
-        cum_acc.append(acc)
-        cum_f1.append(f1)
+            # Store loss, accuracy and f1 score for plotting
+            cum_loss.append(loss.item())
+            cum_acc.append(acc)
+            cum_f1.append(f1)
 
-        # print(f"Pred: '{y_pred}', G-Truth: '{y}', Loss: '{loss.item()}', Acc: '{acc}', F1: '{f1}'")
+            # print(f"Pred: '{y_pred}', G-Truth: '{y}', Loss: '{loss.item()}', Acc: '{acc}', F1: '{f1}'")
 
-        tqdm_bar.set_description(f"Epoch {epoch+1}/{epochs} - Loss: {loss.item():.3f} - Accuracy: {acc:.3f} - F1: {f1:.3f}")
-    
-    # Plot loss, accuracy and f1 score
-    plot_data(cum_loss, cum_acc, cum_f1, title="Train set")
+            tqdm_bar.set_description(f"Epoch {epoch+1}/{epochs} - Loss: {loss.item():.3f} - Accuracy: {acc:.3f} - F1: {f1:.3f}")
+        
+        # Save the model
+        torch.save(model.state_dict(), "model.pt")
 
-    # Reset cum_loss, cum_acc and cum_f1
-    cum_loss = []
-    cum_acc = []
-    cum_f1 = []
-    
+        # Plot loss, accuracy and f1 score
+        plot_data(cum_loss, cum_acc, cum_f1, title="Train set")
+
     # Test
     model.eval()
     
