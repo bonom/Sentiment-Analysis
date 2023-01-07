@@ -163,8 +163,8 @@ def train_polarity_classification(epochs: int = 10, lr: float = 0.001, weight_de
     test_set = CustomDataset(test_set_x, test_set_y)
     
     # Make DataLoader
-    train_loader = DataLoader(train_set, batch_size=32, shuffle=True, collate_fn=collate_fn)
-    test_loader = DataLoader(test_set, batch_size=32, shuffle=True, collate_fn=collate_fn)
+    train_loader = DataLoader(train_set, batch_size=4096, shuffle=True, collate_fn=collate_fn)
+    test_loader = DataLoader(test_set, batch_size=4096, shuffle=True, collate_fn=collate_fn)
     
     # Create a custom classifier
     model = LSTM(input_size=len(word2index), emb_size=128, hidden_size=128, output_size=1).to(device)
@@ -204,8 +204,6 @@ def train_polarity_classification(epochs: int = 10, lr: float = 0.001, weight_de
                 loss = criterion(y_pred, y)
                 loss.backward()
                 optimizer.step()
-
-                x.detach()
 
             # y_pred can be a list of floats, so we need to round them to get accuracy and f1 score and convert them to numpy
             y_pred = torch.round(torch.sigmoid(y_pred)).cpu().detach().numpy()
