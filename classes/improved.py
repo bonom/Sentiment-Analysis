@@ -113,19 +113,12 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
 
             y_pred = model(x, l)
             loss = criterion(y_pred, y)
-                        
+
             y_pred = torch.round(torch.sigmoid(y_pred)).cpu().detach().numpy()
             y = y.cpu().detach().numpy()
 
             acc = accuracy_score(y, y_pred)
             f1 = f1_score(y, y_pred)      
-
-            cum_loss.append(loss.item())
-            cum_acc.append(acc)
-            cum_f1.append(f1)
-    
-    # Plot loss, accuracy and f1 score
-    plot_data(cum_loss, cum_acc, cum_f1, title="Test set")
 
     # Print results
     print(f"Achieved accuracy: {acc:.3f}\nAchieved f1 score: {f1:.3f}")
