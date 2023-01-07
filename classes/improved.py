@@ -205,6 +205,8 @@ def train_polarity_classification(epochs: int = 10, lr: float = 0.001, weight_de
                 loss.backward()
                 optimizer.step()
 
+                x.detach()
+
             # y_pred can be a list of floats, so we need to round them to get accuracy and f1 score and convert them to numpy
             y_pred = torch.round(torch.sigmoid(y_pred)).cpu().detach().numpy()
             y = y.cpu().detach().numpy()
