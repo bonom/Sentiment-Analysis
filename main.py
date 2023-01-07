@@ -22,7 +22,7 @@ if __name__ == '__main__':
     subj_class = train_subjectivity_classification(device=device)
 
     # Train polarity classifier with custom implementation
-    pol_class = train_polarity_classification(device=device)
+    pol_class = train_polarity_classification(epochs=5, device=device)
 
     # Train subjectivity classifier with custom implementation
     # subj_class = train_subjectivity_classification_paper(device=device)
