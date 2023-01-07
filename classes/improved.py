@@ -3,9 +3,8 @@ from sklearn.metrics import accuracy_score, f1_score
 import torch
 import numpy as np
 from tqdm import tqdm
-from torch.autograd import Variable
+import pdb
 
-import matplotlib.pyplot as plt
 import torch.nn as nn
 
 from torch.utils.data import DataLoader
@@ -67,6 +66,7 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
         tqdm_bar = tqdm(range(epochs), desc=f"Epoch 0/{epochs} - Loss: {np.inf} - Accuracy: {-np.inf} - F1: {-np.inf}")
         for epoch in tqdm_bar:
             # Train
+            pdb.set_trace()
             model.train()
             for x, y, l in train_loader:  
                 # Move to GPU
@@ -107,6 +107,26 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
         # Plot loss, accuracy and f1 score
         plot_data(cum_loss, cum_acc, cum_f1, title="Train set")
 
+    # Test
+    model.eval()
+    
+    with torch.no_grad():
+        for x, y, l in test_loader:
+            x = x.to(device)
+            y = y.to(device)
+
+            y_pred = model(x, l)
+            loss = criterion(y_pred, y)
+
+            y_pred = torch.round(torch.sigmoid(y_pred)).cpu().detach().numpy()
+            y = y.cpu().detach().numpy()
+
+            acc = accuracy_score(y, y_pred)
+            f1 = f1_score(y, y_pred)      
+
+    # Print results
+    print(f"Achieved accuracy: {acc:.3f}\nAchieved f1 score: {f1:.3f}")
+    
     return model
 
 def train_polarity_classification(subjectivity_classifier: nn.Module, lr: float = 0.001, epochs: int = 10, weight_decay: float = 0.0):
