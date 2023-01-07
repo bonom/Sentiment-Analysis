@@ -1,6 +1,8 @@
+import torch
 from typing import List
 import nltk
-
+import matplotlib.pyplot as plt
+import numpy as np
 from nltk.corpus import stopwords
 
 from sklearn.feature_extraction.text import CountVectorizer
@@ -41,6 +43,50 @@ def create_dataset(data, labels):
     
     return train_set_x, train_set_y, test_set_x, test_set_y
 
+# Collate_fn
+def collate_fn(batch):
+    def pad_sequence(sequences:List[torch.Tensor], lengths, max_len):
+        # Pad the sequences
+        padded_sequences = torch.zeros(len(sequences), max_len).long()
+        for i, seq in enumerate(sequences):
+            end = lengths[i]
+            padded_sequences[i, :end] = seq[:end]
+        return padded_sequences
+
+    # First sort the batch by the length of the sentences (in descending order)
+    batch.sort(key=lambda x: len(x[0]), reverse=True)
+    # Then get the sentences and labels
+    sentences, labels = zip(*batch)
+
+    # Get the lengths of the sentences
+    lengths = [len(s) for s in sentences]
+    max_len = max(lengths)
+
+    # Pad the sentences
+    sentences = pad_sequence(sentences, lengths, max_len)
+
+    # Convert the labels to a tensor
+    labels = torch.stack(labels).squeeze(1)
+
+    return sentences, labels, torch.stack([torch.tensor(l) for l in lengths])
+
+def plot_data(loss, accuracy, f1_score, title="Loss, Accuracy & F1 Score"):
+    _, (ax1, ax2) = plt.subplots(1, 2, figsize=(30, 10))
+    ax1.plot(np.arange(len(loss)), loss)
+    ax1.set_title('Loss')
+    ax1.set_xlabel('Epochs')
+    ax1.set_ylabel('Loss')
+
+    ax2.plot(np.arange(len(accuracy)), accuracy, label='Accuracy')
+    ax2.plot(np.arange(len(f1_score)), f1_score, label='F1 Score')
+    ax2.set_title('Accuracy & F1 Score')
+    ax2.set_xlabel('Epochs')
+    ax2.set_ylabel('Accuracy & F1 Score')
+    ax2.legend()
+
+    plt.suptitle(title)
+    plt.show()
+
 from nltk.stem import PorterStemmer
 
 def stem_sentences(sentences):
@@ -51,6 +97,15 @@ def stem_sentences(sentences):
         stemmed_sentences.append(' '.join(stemmed_words))
     return stemmed_sentences
 
+def create_word_2_index(sentences):
+    word2index = {}
+    for sentence in sentences:
+        for word in sentence:
+            if word not in word2index:
+                word2index[word] = len(word2index)
+    word2index["<UNK>"] = len(word2index)
+
+    return word2index
 
 def remove_stopwords(sentences:List[str]):
     # remove stopwords from a list of sentences
