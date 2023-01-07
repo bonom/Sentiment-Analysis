@@ -123,7 +123,7 @@ def train_subjectivity_classification(epochs:int = 40, lr:float = 0.001, weight_
     
     return model
 
-def train_polarity_classification(epochs: int = 20, lr: float = 0.001, weight_decay: float = 0.0, device: str = 'cpu'):
+def train_polarity_classification(epochs: int = 5, lr: float = 0.001, weight_decay: float = 0.0, device: str = 'cpu'):
     """
     Do polarity classification using a trained classifier.
     """
