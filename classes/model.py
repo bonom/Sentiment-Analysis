@@ -1,3 +1,4 @@
+import os
 import torch
 import torch.nn as nn
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
@@ -89,7 +90,9 @@ class LSTM(nn.Module):
         return x
     
     def save(self, path:str):
+        print(f"Saving model to '{os.path.abspath(path)}'")
         torch.save(self.state_dict(), path)
     
     def load(self, path:str):
+        print(f"Loading model from '{os.path.abspath(path)}'")
         self.load_state_dict(torch.load(path))
