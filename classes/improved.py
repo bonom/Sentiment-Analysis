@@ -95,22 +95,36 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
             tqdm_bar.set_description(f"Epoch {epoch+1}/{epochs} - Loss: {loss.item():.3f} - Accuracy: {acc:.3f} - F1: {f1:.3f}")
     
     # Plot loss, accuracy and f1 score
-    plot_data(cum_loss, cum_acc, cum_f1)
+    plot_data(cum_loss, cum_acc, cum_f1, title="Train set")
+
+    # Reset cum_loss, cum_acc and cum_f1
+    cum_loss = []
+    cum_acc = []
+    cum_f1 = []
     
     # Test
     model.eval()
     
-    for x, y, l in test_loader:
-        x = x.to(device)
-        y = y.to(device)
+    with torch.no_grad():
+        for x, y, l in test_loader:
+            x = x.to(device)
+            y = y.to(device)
 
-        y_pred = model(x, l)
-        
-        y_pred = torch.round(torch.sigmoid(y_pred)).cpu().detach().numpy()
-        y = y.cpu().detach().numpy()
+            y_pred = model(x, l)
+            
+            y_pred = torch.round(torch.sigmoid(y_pred)).cpu().detach().numpy()
+            y = y.cpu().detach().numpy()
 
-        acc = accuracy_score(y, y_pred)
-        f1 = f1_score(y, y_pred)      
+            loss = criterion(y_pred, y)
+            acc = accuracy_score(y, y_pred)
+            f1 = f1_score(y, y_pred)      
+
+            cum_loss.append(loss.item())
+            cum_acc.append(acc)
+            cum_f1.append(f1)
+    
+    # Plot loss, accuracy and f1 score
+    plot_data(cum_loss, cum_acc, cum_f1, title="Test set")
 
     # Print results
     print(f"Achieved accuracy: {acc:.3f}\nAchieved f1 score: {f1:.3f}")

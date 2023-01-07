@@ -88,3 +88,8 @@ class LSTM(nn.Module):
 
         return x
     
+    def save(self, path:str):
+        torch.save(self.state_dict(), path)
+    
+    def load(self, path:str):
+        self.load_state_dict(torch.load(path))
