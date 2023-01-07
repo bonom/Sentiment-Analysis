@@ -7,6 +7,7 @@ from tqdm import tqdm
 from torch.autograd import Variable
 
 import matplotlib.pyplot as plt
+import torch.nn as nn
 
 from torch.utils.data import DataLoader
 from nltk.corpus import movie_reviews, subjectivity
@@ -111,11 +112,11 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
             y = y.to(device)
 
             y_pred = model(x, l)
-            
+            loss = criterion(y_pred, y)
+                        
             y_pred = torch.round(torch.sigmoid(y_pred)).cpu().detach().numpy()
             y = y.cpu().detach().numpy()
 
-            loss = criterion(y_pred, y)
             acc = accuracy_score(y, y_pred)
             f1 = f1_score(y, y_pred)      
 
@@ -131,8 +132,8 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
     
     return model
 
-def train_polarity_classification():
+def train_polarity_classification(subjectivity_classifier: nn.Module, lr: float = 0.001, epochs: int = 10, weight_decay: float = 0.0):
     """
-    Do polarity classification using a custom classifier.
+    Do polarity classification using a trained classifier.
     """
     return
