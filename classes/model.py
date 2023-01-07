@@ -68,7 +68,7 @@ class LSTM(nn.Module):
     def forward(self, x, lengths):
         # Embedding layer
         x = self.embedding(x)
-        x = pack_padded_sequence(x, lengths, batch_first=True)
+        x = pack_padded_sequence(x, lengths.detach().numpy(), batch_first=True)
 
         # LSTM layer
         x, _ = self.memory(x)
