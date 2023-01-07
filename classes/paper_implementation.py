@@ -8,10 +8,10 @@ import torch.nn as nn
 
 from torch.utils.data import DataLoader
 from nltk.corpus import movie_reviews, subjectivity
-from classes.commons import create_dataset, create_word_2_index, list2str,  lol2str, collate_fn, plot_data
+from classes.commons import create_dataset, create_word_2_index, collate_fn, plot_data
 from classes.dataset import CustomDataset
 
-from classes.model import BiLSTM_CNN_Attention, LSTM
+from classes.model import BiLSTM_CNN_Attention
 
 def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_decay:float = 0.0001, device:str = 'cpu') -> nn.Module:
     """
@@ -43,15 +43,13 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
     test_loader = DataLoader(test_set, batch_size=4096, shuffle=True, collate_fn=collate_fn)
     
     # Create a custom classifier
-    model = LSTM(input_size=len(word2index), emb_size=128, hidden_size=128, output_size=1).to(device)
-    # model = BiLSTM_CNN_Attention(vocab_size=len(word2index), emb_dim=100, lstm_hidden_dim=128, lstm_num_layers=1, cnn_num_filters=2, cnn_filter_sizes=(256, 256), num_classes=2)
+    model = BiLSTM_CNN_Attention(vocab_size=len(word2index), emb_dim=128, lstm_hidden_dim=128, lstm_num_layers=2, cnn_num_filters=2, cnn_filter_sizes=(128, 128), num_classes=1).to(device)
     criterion = torch.nn.BCEWithLogitsLoss().to(device)
-    # criterion = torch.nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
 
     # Check if model is already trained, if so, load it and skip training
-    if os.path.isdir('weights') and os.path.isfile('weights/subjectivity_classifier.pt'):
-        model.load('weights/subjectivity_classifier.pt')
+    if os.path.isdir('weights') and os.path.isfile('weights/subjectivity_classifier_paper.pt'):
+        model.load('weights/subjectivity_classifier_paper.pt')
         print(f"[SUBJECTIVITY] Model already trained, skipping training")
     else:
         os.makedirs('weights', exist_ok=True)
@@ -100,7 +98,7 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
             tqdm_bar.set_description(f"[SUBJECTIVITY] Epoch {epoch+1}/{epochs} - Loss: {loss.item():.3f} - Accuracy: {acc:.3f} - F1: {f1:.3f}")
         
         # Save the model
-        model.save('weights/subjectivity_classifier.pt')
+        model.save('weights/subjectivity_classifier_paper.pt')
 
         # Plot loss, accuracy and f1 score
         plot_data(cum_loss, cum_acc, cum_f1, title="Subjectivity train results", save_path="plots/subjectivity_train_results.png")
@@ -158,20 +156,18 @@ def train_polarity_classification(epochs: int = 10, lr: float = 0.001, weight_de
     train_set = CustomDataset(train_set_x, train_set_y)
     test_set = CustomDataset(test_set_x, test_set_y)
     
-    # Make DataLoader
+    # Make DataLoader - I had to reduce the batch size to 16 because of memory issues
     train_loader = DataLoader(train_set, batch_size=16, shuffle=True, collate_fn=collate_fn)
     test_loader = DataLoader(test_set, batch_size=16, shuffle=True, collate_fn=collate_fn)
     
     # Create a custom classifier
-    model = LSTM(input_size=len(word2index), emb_size=128, hidden_size=128, output_size=1).to(device)
-    # model = BiLSTM_CNN_Attention(vocab_size=len(word2index), emb_dim=100, lstm_hidden_dim=128, lstm_num_layers=1, cnn_num_filters=2, cnn_filter_sizes=(256, 256), num_classes=2)
+    model = BiLSTM_CNN_Attention(vocab_size=len(word2index), emb_dim=128, lstm_hidden_dim=128, lstm_num_layers=2, cnn_num_filters=2, cnn_filter_sizes=(128, 128), num_classes=1).to(device)
     criterion = torch.nn.BCEWithLogitsLoss().to(device)
-    # criterion = torch.nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
 
     # Check if model is already trained, if so, load it and skip training
-    if os.path.isdir('weights') and os.path.isfile('weights/polarity_classifier.pt'):
-        model.load('weights/polarity_classifier.pt')
+    if os.path.isdir('weights') and os.path.isfile('weights/polarity_classifier_paper.pt'):
+        model.load('weights/polarity_classifier_paper.pt')
         print(f"[POLARITY] Model already trained, skipping training")
     else:
         print(f"[POLARITY] Model not trained, training it now")
@@ -221,7 +217,7 @@ def train_polarity_classification(epochs: int = 10, lr: float = 0.001, weight_de
             tqdm_bar.set_description(f"[POLARITY] Epoch {epoch+1}/{epochs} - Loss: {loss.item():.3f} - Accuracy: {acc:.3f} - F1: {f1:.3f}")
 
         # Save the model
-        model.save('weights/polarity_classifier.pt')
+        model.save('weights/polarity_classifier_paper.pt')
 
         # Plot loss, accuracy and f1 score
         plot_data(cum_loss, cum_acc, cum_f1, title="Poplarity train results", save_path="plots/polarity_train_set")

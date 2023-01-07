@@ -12,20 +12,37 @@ class BiLSTM_CNN_Attention(nn.Module):
         self.attention = nn.Linear(lstm_hidden_dim * 2, 1)
         self.fc = nn.Linear(cnn_num_filters * len(cnn_filter_sizes), num_classes)
 
-    def forward(self, x):
+    def forward(self, x, lengths):
+        # Embedding layer
         x = self.embedding(x)
-        # x = x.permute(1, 0, 2)
-        lstm_out, _ = self.lstm(x)
-        # lstm_out = lstm_out.permute(1,  0)
-        conv_out = torch.cat([nn.functional.relu(conv(lstm_out)) for conv in self.cnn], dim=1)
-        # x = x.permute(0, 2, 1)
-        attention_out = self.attention(conv_out)
-        x = torch.bmm(lstm_out, attention_out)
-        x = torch.flatten(x, start_dim=1)
+        x = pack_padded_sequence(x, lengths, batch_first=True)
+
+        # LSTM layer
+        x, _ = self.memory(x)
+        x, _ = pad_packed_sequence(x, batch_first=True)
+
+        # CNN layer
+        x = torch.cat([nn.functional.relu(conv(x)) for conv in self.cnn], dim=1)
+        
+        # Attention layer
+        x = x * self.attention(x)
+        
+        # Classifier layer
         x = self.fc(x)
-        x = nn.functional.softmax(x, dim=1)
+        
         return x
 
+    def save(self, path:str) -> None:
+        print(f"Saving model to '{os.path.abspath(path)}'")
+        torch.save(self.state_dict(), path)
+    
+    def load(self, path:str) -> None:
+        print(f"Loading model from '{os.path.abspath(path)}'")
+        try:
+            self.load_state_dict(torch.load(path))
+        except RuntimeError:
+            print("[WARNING] Model architecture does not match, loading only weights")
+            self.load_state_dict(torch.load(path, map_location=torch.device('cpu')))
 
 
 class Attention(nn.Module):
@@ -53,8 +70,9 @@ class LSTM(nn.Module):
         # First we need an embedding layer to convert our input tokens into vectors
         self.embedding = nn.Embedding(input_size, emb_size, padding_idx=padding_idx)
 
-        # Then we need our LSTM layer # TODO: Test GRU
+        # Then we need our memory layer, which is a LSTM in this case
         self.memory = nn.LSTM(input_size=emb_size, hidden_size=hidden_size, num_layers=n_layers, bidirectional=True, batch_first=True)
+        # Can also be used with GRU, to test it out, just uncomment the line below and comment the line above
         # self.memory = nn.GRU(input_size=emb_size, hidden_size=hidden_size, num_layers=n_layers, bidirectional=True, batch_first=True)
 
         # Then we need a dropout layer to prevent overfitting
