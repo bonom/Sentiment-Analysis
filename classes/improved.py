@@ -107,6 +107,7 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
         # Plot loss, accuracy and f1 score
         plot_data(cum_loss, cum_acc, cum_f1, title="Train set")
 
+    return 
     # Test
     model.eval()
     
