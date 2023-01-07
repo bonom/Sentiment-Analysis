@@ -3,7 +3,6 @@ from sklearn.metrics import accuracy_score, f1_score
 import torch
 import numpy as np
 from tqdm import tqdm
-import ipdb
 
 import torch.nn as nn
 
@@ -66,7 +65,6 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
         tqdm_bar = tqdm(range(epochs), desc=f"Epoch 0/{epochs} - Loss: {np.inf} - Accuracy: {-np.inf} - F1: {-np.inf}")
         for epoch in tqdm_bar:
             # Train
-            ipdb.set_trace()
             model.train()
             for x, y, l in train_loader:  
                 # Move to GPU
