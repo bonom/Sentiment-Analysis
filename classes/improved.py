@@ -77,22 +77,22 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
             loss.backward()
             optimizer.step()
 
-            # y_pred can be a list of floats, so we need to round them to get accuracy and f1 score and convert them to numpy
-            y_pred = torch.round(torch.sigmoid(y_pred)).cpu().detach().numpy()
-            y = y.cpu().detach().numpy()
+        # y_pred can be a list of floats, so we need to round them to get accuracy and f1 score and convert them to numpy
+        y_pred = torch.round(torch.sigmoid(y_pred)).cpu().detach().numpy()
+        y = y.cpu().detach().numpy()
 
-            # Compute accuracy and f1 score
-            acc = accuracy_score(y, y_pred)
-            f1 = f1_score(y, y_pred)
+        # Compute accuracy and f1 score
+        acc = accuracy_score(y, y_pred)
+        f1 = f1_score(y, y_pred)
 
-            # Store loss, accuracy and f1 score for plotting
-            cum_loss.append(loss.item())
-            cum_acc.append(acc)
-            cum_f1.append(f1)
+        # Store loss, accuracy and f1 score for plotting
+        cum_loss.append(loss.item())
+        cum_acc.append(acc)
+        cum_f1.append(f1)
 
-            # print(f"Pred: '{y_pred}', G-Truth: '{y}', Loss: '{loss.item()}', Acc: '{acc}', F1: '{f1}'")
+        # print(f"Pred: '{y_pred}', G-Truth: '{y}', Loss: '{loss.item()}', Acc: '{acc}', F1: '{f1}'")
 
-            tqdm_bar.set_description(f"Epoch {epoch+1}/{epochs} - Loss: {loss.item():.3f} - Accuracy: {acc:.3f} - F1: {f1:.3f}")
+        tqdm_bar.set_description(f"Epoch {epoch+1}/{epochs} - Loss: {loss.item():.3f} - Accuracy: {acc:.3f} - F1: {f1:.3f}")
     
     # Plot loss, accuracy and f1 score
     plot_data(cum_loss, cum_acc, cum_f1, title="Train set")

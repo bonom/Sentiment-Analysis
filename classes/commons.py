@@ -71,7 +71,8 @@ def collate_fn(batch):
     return sentences, labels, torch.stack([torch.tensor(l) for l in lengths])
 
 def plot_data(loss, accuracy, f1_score, title="Loss, Accuracy & F1 Score"):
-    _, (ax1, ax2) = plt.subplots(1, 2, figsize=(30, 10))
+    plt.close('all')
+    _, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
     ax1.plot(np.arange(len(loss)), loss)
     ax1.set_title('Loss')
     ax1.set_xlabel('Epochs')
