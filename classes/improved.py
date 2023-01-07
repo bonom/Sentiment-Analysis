@@ -65,7 +65,6 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
             # Move to GPU
             x = x.to(device)
             y = y.to(device)
-            l = l.to(device)
             
             # Clear gradients          
             optimizer.zero_grad()
