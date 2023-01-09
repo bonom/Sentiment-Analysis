@@ -63,7 +63,7 @@ class Attention(nn.Module):
         self.softmax = nn.Softmax(dim=1)
     
     def forward(self, x):
-        x = self.dropout(x)
+        x = self.dropout(x, training=self.training)
         x = self.attn(x)
         x = self.softmax(x)
         return x
@@ -102,7 +102,7 @@ class LSTM(nn.Module):
         x, _ = pad_packed_sequence(x, batch_first=True)
 
         # Dropout layer
-        x = self.dropout(x)
+        x = self.dropout(x, training=self.training)
 
         # Attention layer
         x = x * self.attention(x)
