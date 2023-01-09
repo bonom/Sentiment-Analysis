@@ -10,6 +10,6 @@ Before January 25th
 - [X] Custom implementation
 
 # Todo
-- [] Implement paper (BiLSTMCNN)
-- [] Implement a second idea (from a paper again)
-- [] Write the report
+- [ ] Implement paper (BiLSTMCNN)
+- [ ] Implement a second idea (from a paper again)
+- [ ] Write the report
