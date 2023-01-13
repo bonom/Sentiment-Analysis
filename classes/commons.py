@@ -82,7 +82,7 @@ def collate_fn(batch):
     # Convert the labels to a tensor
     labels = torch.stack(labels).squeeze(1)
 
-    return new_sentences, labels, torch.stack([torch.tensor(l) for l in lengths]).to('cpu')
+    return new_sentences, labels, torch.stack([torch.tensor(l) for l in lengths])
 
 #################################################
 # Print logs
