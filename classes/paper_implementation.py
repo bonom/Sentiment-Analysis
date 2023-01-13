@@ -49,7 +49,7 @@ def train_subjectivity_classification(epochs:int = 50, lr:float = 0.001, weight_
     test_loader = DataLoader(test_set, batch_size=4096, shuffle=True, collate_fn=collate_fn)
     
     # Create a custom classifier
-    model = BiLSTM_CNN_Attention(vocab_size=len(word2index), emb_dim=128, lstm_hidden_dim=128, cnn_num_filters=3, cnn_filter_sizes=(2,4,6), num_classes=1)
+    model = BiLSTM_CNN_Attention(vocab_size=len(word2index), emb_dim=128, lstm_hidden_dim=128, cnn_num_filters=3, cnn_filter_sizes=(2,4,6), num_classes=1).to(device)
     criterion = torch.nn.BCEWithLogitsLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
 
@@ -134,7 +134,7 @@ def train_polarity_classification(epochs: int = 50, lr: float = 0.001, weight_de
     test_loader = DataLoader(test_set, batch_size=16, shuffle=True, collate_fn=collate_fn)
     
     # Create a custom classifier
-    model = BiLSTM_CNN_Attention(vocab_size=len(word2index), emb_dim=128, lstm_hidden_dim=128, cnn_num_filters=3, cnn_filter_sizes=(2,4,6), num_classes=1)
+    model = BiLSTM_CNN_Attention(vocab_size=len(word2index), emb_dim=128, lstm_hidden_dim=128, cnn_num_filters=3, cnn_filter_sizes=(2,4,6), num_classes=1).to(device)
     criterion = torch.nn.BCEWithLogitsLoss().to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
 
