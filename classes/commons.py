@@ -161,7 +161,7 @@ def train_single_epoch(model:nn.Module, train_loader: DataLoader, optimizer:torc
         sentences, labels = sentences.to(device), labels.to(device)
 
         # Forward pass
-        predictions = model(sentences, lengths)
+        predictions = model(sentences, lengths.cpu().detach().numpy())
 
         # Calculate loss
         loss = criterion(predictions, labels)
@@ -204,7 +204,7 @@ def test_single_epoch(model:nn.Module, test_loader: DataLoader, criterion, devic
             sentences, labels = sentences.to(device), labels.to(device)
 
             # Forward pass
-            predictions = model(sentences, lengths)
+            predictions = model(sentences, lengths.cpu().detach().numpy())
 
             # Calculate loss
             loss = criterion(predictions, labels)
