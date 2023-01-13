@@ -161,6 +161,11 @@ def train_single_epoch(model:nn.Module, train_loader: DataLoader, optimizer:torc
         sentences, labels = sentences.to(device), labels.to(device)
 
         print(f"DEVICE ON LENGTHS: {lengths.device}")
+        print(f"DEVICE ON LENGTHS: {lengths.device}")
+        print(f"DEVICE ON LENGTHS: {lengths.device}")
+        print(f"DEVICE ON LENGTHS: {lengths.device}")
+        print(f"DEVICE ON LENGTHS: {lengths.device}")
+        break
         # Forward pass
         predictions = model(sentences, lengths)
 
