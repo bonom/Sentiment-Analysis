@@ -34,6 +34,12 @@ if __name__ == '__main__':
         # Train polarity classifier with custom implementation
         pol_class = train_polarity_classification(epochs=100, device=device)
     except Exception as e:
+        for variable in locals().keys():
+            if variable != 'e' and variable != 'torch':
+                del locals()[variable]
+        for variable in globals().keys():
+            del globals()[variable]
+
         torch.cuda.empty_cache()
         raise e
 
