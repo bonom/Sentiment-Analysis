@@ -157,8 +157,8 @@ def train_single_epoch(model:nn.Module, train_loader: DataLoader, optimizer:torc
     train_acc = 0
     train_f1 = 0
     for sentences, labels, lengths in train_loader:
-        # Move to device
-        sentences, labels, lengths = sentences.to(device), labels.to(device), lengths.to(device)
+        # Move to device - No need to move lengths to device since it is needed only on cpu
+        sentences, labels = sentences.to(device), labels.to(device)
 
         # Forward pass
         predictions = model(sentences, lengths)
@@ -200,8 +200,8 @@ def test_single_epoch(model:nn.Module, test_loader: DataLoader, criterion, devic
     
     with torch.no_grad():
         for sentences, labels, lengths in test_loader:
-            # Move to device
-            sentences, labels, lengths = sentences.to(device), labels.to(device), lengths.to(device)
+            # Move to device - No need to move lengths to device since it is needed only on cpu
+            sentences, labels = sentences.to(device), labels.to(device)
 
             # Forward pass
             predictions = model(sentences, lengths)
