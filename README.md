@@ -8,8 +8,7 @@ Before January 25th
 
 - [X] Baseline
 - [X] Custom implementation
+- [X] Implement paper (BiLSTMCNN)
 
 # Todo
-- [ ] Implement paper (BiLSTMCNN)
-- [ ] Implement a second idea (from a paper again)
-- [ ] Write the report
+- [ ] Correct training procedure and testing procedure (one single step training function and a big training for epochs function that include testing)
