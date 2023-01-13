@@ -82,7 +82,7 @@ def collate_fn(batch):
     # Convert the labels to a tensor
     labels = torch.stack(labels).squeeze(1)
 
-    return new_sentences, labels, torch.stack([torch.tensor(l) for l in lengths])
+    return new_sentences, labels, torch.stack([torch.tensor(l) for l in lengths]).to('cpu')
 
 #################################################
 # Print logs
@@ -160,8 +160,9 @@ def train_single_epoch(model:nn.Module, train_loader: DataLoader, optimizer:torc
         # Move to device - No need to move lengths to device since it is needed only on cpu
         sentences, labels = sentences.to(device), labels.to(device)
 
+        print(f"DEVICE ON LENGTHS: {lengths.device}")
         # Forward pass
-        predictions = model(sentences, lengths.cpu().detach().numpy())
+        predictions = model(sentences, lengths)
 
         # Calculate loss
         loss = criterion(predictions, labels)
