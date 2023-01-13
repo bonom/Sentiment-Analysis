@@ -160,12 +160,6 @@ def train_single_epoch(model:nn.Module, train_loader: DataLoader, optimizer:torc
         # Move to device - No need to move lengths to device since it is needed only on cpu
         sentences, labels = sentences.to(device), labels.to(device)
 
-        print(f"DEVICE ON LENGTHS: {lengths.device}")
-        print(f"DEVICE ON LENGTHS: {lengths.device}")
-        print(f"DEVICE ON LENGTHS: {lengths.device}")
-        print(f"DEVICE ON LENGTHS: {lengths.device}")
-        print(f"DEVICE ON LENGTHS: {lengths.device}")
-        break
         # Forward pass
         predictions = model(sentences, lengths)
 
