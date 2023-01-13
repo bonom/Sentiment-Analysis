@@ -32,7 +32,7 @@ class BiLSTM_CNN_Attention(nn.Module):
         
         cnn_out = cnn_out.permute(0, 2, 1) # (batch_size, new_seq_len, cnn_num_filters*len(cnn_filter_sizes))
         
-        cnn_out = nn.utils.rnn.pack_padded_sequence(cnn_out, lengths, batch_first=True)
+        cnn_out = nn.utils.rnn.pack_padded_sequence(cnn_out, lengths.cpu().detach().numpy(), batch_first=True)
         lstm_out, _ = self.lstm(cnn_out)
         lstm_out, _ = nn.utils.rnn.pad_packed_sequence(lstm_out, batch_first=True) # (batch_size, seq_len, 2*lstm_hidden_dim)
         
@@ -102,7 +102,7 @@ class LSTM(nn.Module):
     def forward(self, x:torch.Tensor, lengths:torch.Tensor) -> torch.Tensor:
         # Embedding layer
         x = self.embedding(x)
-        x = pack_padded_sequence(x, lengths, batch_first=True)
+        x = pack_padded_sequence(x, lengths.cpu().detach().numpy(), batch_first=True)
 
         # LSTM layer
         x, _ = self.memory(x)
