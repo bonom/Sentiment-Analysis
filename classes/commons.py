@@ -176,6 +176,7 @@ def train_single_epoch(model:nn.Module, train_loader: DataLoader, optimizer:torc
         # torch.nn.functional.sigmoid(predictions) is deprecated
         pred = torch.sigmoid(predictions).round()
         pred = pred.cpu().detach().numpy()
+        labels = labels.cpu().detach().numpy()
 
         # Calculate accuracy and f1 score
         acc = accuracy_score(pred, labels)
@@ -213,6 +214,7 @@ def test_single_epoch(model:nn.Module, test_loader: DataLoader, criterion, devic
             # torch.nn.functional.sigmoid(predictions) is deprecated
             pred = torch.sigmoid(predictions).round()
             pred = pred.cpu().detach().numpy()
+            labels = labels.cpu().detach().numpy()
 
             # Calculate accuracy and f1 score
             acc = accuracy_score(pred, labels)
