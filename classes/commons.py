@@ -1,15 +1,22 @@
 import os
-import torch
-from typing import List
 import nltk
+import torch
+import torch.nn as nn
 import matplotlib.pyplot as plt
-import numpy as np
+
+from typing import List
 from nltk.corpus import stopwords
-
-from sklearn.feature_extraction.text import CountVectorizer
+from torch.utils.data import DataLoader
 from sklearn.naive_bayes import MultinomialNB
+from sklearn.model_selection import StratifiedKFold
+from sklearn.metrics import accuracy_score, f1_score
+from sklearn.feature_extraction.text import CountVectorizer
 
-def check_downloads():
+#################################################
+# Check if nltk data is downloaded
+#################################################
+
+def check_downloads() -> None:
     # check if nltk data is downloaded
     try:
         nltk.data.find('tokenizers/punkt')
@@ -32,9 +39,12 @@ def check_downloads():
         nltk.download('subjectivity')
 
     print("[OK] All required nltk data downloaded")
-    return
 
-from sklearn.model_selection import StratifiedKFold
+    return 
+
+#################################################
+# Create dataset function
+#################################################
 
 def create_dataset(data, labels):
     kfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
@@ -44,7 +54,10 @@ def create_dataset(data, labels):
     
     return train_set_x, train_set_y, test_set_x, test_set_y
 
-# Collate_fn
+#################################################
+# Collate function
+#################################################
+
 def collate_fn(batch):
     def pad_sequence(sequences:List[torch.Tensor], lengths, max_len):
         # Pad the sequences
@@ -64,27 +77,183 @@ def collate_fn(batch):
     max_len = max(lengths)
 
     # Pad the sentences
-    sentences = pad_sequence(sentences, lengths, max_len)
+    new_sentences = pad_sequence(sentences, lengths, max_len)
 
     # Convert the labels to a tensor
     labels = torch.stack(labels).squeeze(1)
 
-    return sentences, labels, torch.stack([torch.tensor(l) for l in lengths])
+    return new_sentences, labels, torch.stack([torch.tensor(l) for l in lengths])
 
-def plot_data(loss, accuracy, f1_score, title="Loss, Accuracy & F1 Score", save_path:str=None):
+#################################################
+# Print logs
+#################################################
+
+def make_log_print(status:str = "Train", epoch:tuple = None, timer:float = None, train_metrics:dict = None, test_metrics:dict = None, *args, **kwargs) -> None:
+    def _convert_seconds_to_h_m_s(seconds):
+        m, s = divmod(seconds, 60)
+        h, m = divmod(m, 60)
+        h, m, s = int(h), int(m), int(s)
+
+        if h > 0:
+            _ret = f"{h}:{m}:{s} hh:mm:ss"
+        else:
+            if m > 0:
+                _ret = f"{m}:{s} mm:ss"
+            else:
+                _ret = f"{s} seconds"
+        
+        return _ret
+    
+    _string = " " + status + " "
+    if epoch is not None:
+        _actual_epoch = epoch[0]
+        _total_epoch = epoch[1]
+
+        _string = " " + status + " - Epoch " + str(_actual_epoch) + "/" + str(_total_epoch) + " " 
+    
+    # Convert seconds of timer to minutes:seconds
+    if timer is not None:
+        _chrono = _convert_seconds_to_h_m_s(timer)
+        
+        # Compute the estimate time remaining 
+        _eta = (_total_epoch - _actual_epoch) * timer/_actual_epoch 
+        _eta = _convert_seconds_to_h_m_s(_eta)
+
+    
+    print(f"{_string:=^60}")
+    if train_metrics is not None:
+        print(f"  Training loss {train_metrics['loss']:.3f}, Training accuracy {train_metrics['accuracy']:.3f}, Training f1 {train_metrics['f1']:.3f}")
+    
+    if test_metrics is not None:
+        print(f"  Test loss {test_metrics['loss']:.3f}, Test accuracy {test_metrics['accuracy']:.3f}, Test f1 {test_metrics['f1']:.3f}")
+
+    if timer is not None:
+        print(f"  Time elapsed: {_chrono} - ETA: {_eta} - Time per epoch: {round(_chrono/_actual_epoch)} seconds")
+
+    if args is not None:
+        for arg in args:
+            for k, v in arg.items():
+                print(f"  {k}: {v}")
+
+    if kwargs is not None:
+        for k, v in kwargs.items():
+            print(f"  {k}: {v}")
+        
+    _string = " End " + status.lower() + " "
+    if epoch is not None:
+        _string = " End " + status.lower() + " " + str(_actual_epoch) + "/" + str(_total_epoch) + " "
+
+    print(f"{_string:=^60}")
+
+    return
+
+#################################################
+# Training and testing functions
+#################################################
+
+def train_single_epoch(model:nn.Module, train_loader: DataLoader, optimizer:torch.optim.Optimizer, criterion, device):
+    model.train()
+    train_loss = 0
+    train_acc = 0
+    train_f1 = 0
+    for sentences, labels, lengths in train_loader:
+        # Move to device
+        sentences, labels, lengths = sentences.to(device), labels.to(device), lengths.to(device)
+
+        # Forward pass
+        predictions = model(sentences, lengths)
+
+        # Calculate loss
+        loss = criterion(predictions, labels)
+
+        # Zero the gradients
+        optimizer.zero_grad()
+        # Backward pass and update weights
+        loss.backward()
+        optimizer.step()
+
+        # Detach the predictions from the graph
+        # torch.nn.functional.sigmoid(predictions) is deprecated
+        pred = torch.sigmoid(predictions).round()
+        pred = pred.cpu().detach().numpy()
+
+        # Calculate accuracy and f1 score
+        acc = accuracy_score(pred, labels)
+        f1 = f1_score(pred, labels, zero_division=0)
+
+        # Update train loss, accuracy and f1 score
+        train_loss += loss.item()
+        train_acc += acc.item()
+        train_f1 += f1.item()
+    
+    return {
+        "loss": train_loss/len(train_loader),
+        "accuracy": train_acc/len(train_loader),
+        "f1": train_f1/len(train_loader)
+    }
+
+def test_single_epoch(model:nn.Module, test_loader: DataLoader, criterion, device):
+    model.eval()
+    test_loss = 0
+    test_acc = 0
+    test_f1 = 0
+    
+    with torch.no_grad():
+        for sentences, labels, lengths in test_loader:
+            # Move to device
+            sentences, labels, lengths = sentences.to(device), labels.to(device), lengths.to(device)
+
+            # Forward pass
+            predictions = model(sentences, lengths)
+
+            # Calculate loss
+            loss = criterion(predictions, labels)
+
+            # Detach the predictions from the graph
+            # torch.nn.functional.sigmoid(predictions) is deprecated
+            pred = torch.sigmoid(predictions).round()
+            pred = pred.cpu().detach().numpy()
+
+            # Calculate accuracy and f1 score
+            acc = accuracy_score(pred, labels)
+            f1 = f1_score(pred, labels)
+
+            # Update val loss, accuracy and f1 score
+            test_loss += loss.item()
+            test_acc += acc.item()
+            test_f1 += f1.item()
+
+    return {
+        "loss": test_loss/len(test_loader),
+        "accuracy": test_acc/len(test_loader),
+        "f1": test_f1/len(test_loader)
+    }
+
+#################################################
+# Plotting functions
+#################################################
+
+def plot_data(data:dict, title="Loss, Accuracy & F1 Score", save_path:str=None):
+    train_data = data['train']
+    test_data = data['test']
+
+    loss = (train_data['loss'], test_data['loss'])
+    accuracy = (train_data['accuracy'], test_data['accuracy'])
+    f1_score = (train_data['f1'], test_data['f1'])
+
     plt.close('all')
-    _, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
-    ax1.plot(np.arange(len(loss)), loss)
-    ax1.set_title('Loss')
-    ax1.set_xlabel('Epochs')
-    ax1.set_ylabel('Loss')
+    # create a subfigure with 2 rows and 3 columns
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
 
-    ax2.plot(np.arange(len(accuracy)), accuracy, label='Accuracy')
-    ax2.plot(np.arange(len(f1_score)), f1_score, label='F1 Score')
-    ax2.set_title('Accuracy & F1 Score')
-    ax2.set_xlabel('Epochs')
-    ax2.set_ylabel('Accuracy & F1 Score')
-    ax2.legend()
+    # plot the data
+    ax1.plot(loss[0], label='Train loss')
+    ax1.plot(loss[1], label='Test loss')
+
+    ax2.plot(accuracy[0], label='Train accuracy')
+    ax2.plot(accuracy[1], label='Test accuracy')
+
+    ax3.plot(f1_score[0], label='Train f1 score')
+    ax3.plot(f1_score[1], label='Test f1 score')
 
     plt.suptitle(title)
     if save_path is not None:
@@ -94,6 +263,10 @@ def plot_data(loss, accuracy, f1_score, title="Loss, Accuracy & F1 Score", save_
         plt.savefig(save_path)
     else:
         plt.show()
+
+#################################################
+# 
+#################################################
 
 from nltk.stem import PorterStemmer
 

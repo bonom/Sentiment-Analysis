@@ -1,19 +1,25 @@
 import os
-from sklearn.metrics import accuracy_score, f1_score
+import copy
+import time
 import torch
 import numpy as np
-from tqdm import tqdm
-
 import torch.nn as nn
 
 from torch.utils.data import DataLoader
-from nltk.corpus import movie_reviews, subjectivity
-from classes.commons import create_dataset, create_word_2_index, collate_fn, plot_data
 from classes.dataset import CustomDataset
-
 from classes.model import BiLSTM_CNN_Attention
+from nltk.corpus import movie_reviews, subjectivity
+from classes.commons import create_dataset, create_word_2_index, collate_fn, make_log_print, plot_data, test_single_epoch, train_single_epoch
 
-def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_decay:float = 0.0001, device:str = 'cpu') -> nn.Module:
+WEIGHTS_PATH = os.path.join('weights', 'paper_implementation')
+WEIGHTS_PATH_SUBJECTIVITY = os.path.join(WEIGHTS_PATH, 'subjectivity_classification.pt')
+WEIGHTS_PATH_POLARITY = os.path.join(WEIGHTS_PATH, 'polarity_classification.pt')
+
+PLOTS_PATH = os.path.join('plots', 'paper_implementation')
+PLOTS_PATH_SUBJECTIVITY = os.path.join(PLOTS_PATH, 'subjectivity_train_loss_accuracy_f1.png')
+PLOTS_PATH_POLARITY = os.path.join(PLOTS_PATH, 'polarity_train_loss_accuracy_f1.png')
+
+def train_subjectivity_classification(epochs:int = 50, lr:float = 0.001, weight_decay:float = 0.0001, device:str = 'cpu') -> nn.Module:
     """
     Do subjectivity classification using a custom classifier.
     """    
@@ -43,89 +49,56 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
     test_loader = DataLoader(test_set, batch_size=4096, shuffle=True, collate_fn=collate_fn)
     
     # Create a custom classifier
-    model = BiLSTM_CNN_Attention(vocab_size=len(word2index), emb_dim=128, lstm_hidden_dim=128, lstm_num_layers=2, cnn_num_filters=2, cnn_filter_sizes=(128, 128), num_classes=1).to(device)
-    criterion = torch.nn.BCEWithLogitsLoss().to(device)
+    model = BiLSTM_CNN_Attention(vocab_size=len(word2index), emb_dim=128, lstm_hidden_dim=128, cnn_num_filters=3, cnn_filter_sizes=(2,4,6), num_classes=1).to(device)
+    criterion = torch.nn.BCEWithLogitsLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
 
-    # Check if model is already trained, if so, load it and skip training
-    if os.path.isdir('weights') and os.path.isfile('weights/subjectivity_classifier_paper.pt'):
-        model.load('weights/subjectivity_classifier_paper.pt')
-        print(f"[SUBJECTIVITY] Model already trained, skipping training")
-    else:
-        os.makedirs('weights', exist_ok=True)
-        print(f"[SUBJECTIVITY] Model not trained, training it now")
-        # Create variables to store the best model
-        cum_loss = []
-        cum_acc = []
-        cum_f1 = []
+    # Create variables to store the best model
+    best_acc = 0
+    best_f1 = 0
+    best_model = None
+    best_loss = np.inf
 
-        # Train the model
-        tqdm_bar = tqdm(range(epochs), desc=f"[SUBJECTIVITY] Epoch 0/{epochs} - Loss: {np.inf} - Accuracy: {-np.inf} - F1: {-np.inf}")
-        for epoch in tqdm_bar:
-            # Train
-            model.train()
-            for x, y, l in train_loader:  
-                # Move to GPU
-                x = x.to(device)
-                y = y.to(device)
-                
-                # Clear gradients          
-                optimizer.zero_grad()
+    # Create variables to store the loss, accuracy and f1 score
+    base_dict = {'loss': [], 'accuracy': [], 'f1': []}
+    data = {'train': copy.deepcopy(base_dict), 'test': copy.deepcopy(base_dict)}
 
-                # Forward propagation
-                y_pred = model(x, l)
+    # Start timer
+    start_time = time.time()
 
-                # Compute loss and backpropagate
-                loss = criterion(y_pred, y)
-                loss.backward()
-                optimizer.step()
+    # Train the model
+    for epoch in range(epochs):
+        # Train
+        train_metrics = train_single_epoch(model, train_loader, optimizer, criterion, device)
+        for key in train_metrics.keys():
+            data['train'][key].append(train_metrics[key])
 
-            # y_pred can be a list of floats, so we need to round them to get accuracy and f1 score and convert them to numpy
-            y_pred = torch.round(torch.sigmoid(y_pred)).cpu().detach().numpy()
-            y = y.cpu().detach().numpy()
+        # Test
+        test_metrics = test_single_epoch(model, test_loader, criterion, device)
+        for key in test_metrics.keys():
+            data['test'][key].append(test_metrics[key])
 
-            # Compute accuracy and f1 score
-            acc = accuracy_score(y, y_pred)
-            f1 = f1_score(y, y_pred)
+        # Print results
+        make_log_print("Train", (epoch+1, epochs), time.time() - start_time, train_metrics, test_metrics)
 
-            # Store loss, accuracy and f1 score for plotting
-            cum_loss.append(loss.item())
-            cum_acc.append(acc)
-            cum_f1.append(f1)
+        # Save the best model
+        if test_metrics['accuracy'] > best_acc:
+            best_acc = test_metrics['accuracy']
+            best_f1 = test_metrics['f1']
+            best_loss = test_metrics['loss']
+            best_model = copy.deepcopy(model)
 
-            # print(f"Pred: '{y_pred}', G-Truth: '{y}', Loss: '{loss.item()}', Acc: '{acc}', F1: '{f1}'")
+    make_log_print("Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})
 
-            tqdm_bar.set_description(f"[SUBJECTIVITY] Epoch {epoch+1}/{epochs} - Loss: {loss.item():.3f} - Accuracy: {acc:.3f} - F1: {f1:.3f}")
-        
-        # Save the model
-        model.save('weights/subjectivity_classifier_paper.pt')
+    # Save the model
+    best_model.save(WEIGHTS_PATH_SUBJECTIVITY)
 
-        # Plot loss, accuracy and f1 score
-        plot_data(cum_loss, cum_acc, cum_f1, title="Subjectivity train results", save_path="plots/subjectivity_train_results.png")
-
-    # Test
-    model.eval()
+    # Plot loss, accuracy and f1 score
+    plot_data(data, title="Subjectivity Paper Implementation", save_path=PLOTS_PATH_SUBJECTIVITY)
     
-    with torch.no_grad():
-        for x, y, l in test_loader:
-            x = x.to(device)
-            y = y.to(device)
+    return best_model
 
-            y_pred = model(x, l)
-            loss = criterion(y_pred, y)
-
-            y_pred = torch.round(torch.sigmoid(y_pred)).cpu().detach().numpy()
-            y = y.cpu().detach().numpy()
-
-            acc = accuracy_score(y, y_pred)
-            f1 = f1_score(y, y_pred)      
-
-    # Print results
-    print(f"[SUBJECTIVITY] Achieved accuracy: {acc:.3f}\n[SUBJECTIVITY] Achieved f1 score: {f1:.3f}")
-    
-    return model
-
-def train_polarity_classification(epochs: int = 10, lr: float = 0.001, weight_decay: float = 0.0, device: str = 'cpu'):
+def train_polarity_classification(epochs: int = 50, lr: float = 0.001, weight_decay: float = 0.0, device: str = 'cpu') -> nn.Module:
     """
     Do polarity classification using a trained classifier.
     """
@@ -161,85 +134,51 @@ def train_polarity_classification(epochs: int = 10, lr: float = 0.001, weight_de
     test_loader = DataLoader(test_set, batch_size=16, shuffle=True, collate_fn=collate_fn)
     
     # Create a custom classifier
-    model = BiLSTM_CNN_Attention(vocab_size=len(word2index), emb_dim=128, lstm_hidden_dim=128, lstm_num_layers=2, cnn_num_filters=2, cnn_filter_sizes=(128, 128), num_classes=1).to(device)
+    model = BiLSTM_CNN_Attention(vocab_size=len(word2index), emb_dim=128, lstm_hidden_dim=128, cnn_num_filters=3, cnn_filter_sizes=(2,4,6), num_classes=1).to(device)
     criterion = torch.nn.BCEWithLogitsLoss().to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
 
-    # Check if model is already trained, if so, load it and skip training
-    if os.path.isdir('weights') and os.path.isfile('weights/polarity_classifier_paper.pt'):
-        model.load('weights/polarity_classifier_paper.pt')
-        print(f"[POLARITY] Model already trained, skipping training")
-    else:
-        print(f"[POLARITY] Model not trained, training it now")
-        # Create variables to store the best model
-        cum_loss = []
-        cum_acc = []
-        cum_f1 = []
+    # Create variables to store the best model
+    best_acc = 0
+    best_f1 = 0
+    best_model = None
+    best_loss = np.inf
 
-        # Train the model
-        tqdm_bar = tqdm(range(epochs), desc=f"[POLARITY] Epoch 0/{epochs} - Loss: {np.inf} - Accuracy: {-np.inf} - F1: {-np.inf}")
-        for epoch in tqdm_bar:
-            # Train
-            model.train()
-            for x, y, l in train_loader:  
-                # Move to GPU
-                x = x.to(device)
-                y = y.to(device)
-                
-                # Clear gradients          
-                optimizer.zero_grad()
-
-                # Forward propagation
-                y_pred = model(x, l)
-
-                # Compute loss and backpropagate
-                loss = criterion(y_pred, y)
-                loss.backward()
-                optimizer.step()
-
-                x = x.cpu().detach().numpy()
-                y = y.cpu().detach().numpy()
-
-            # y_pred can be a list of floats, so we need to round them to get accuracy and f1 score and convert them to numpy
-            y_pred = torch.round(torch.sigmoid(y_pred)).cpu().detach().numpy()
-
-            # Compute accuracy and f1 score
-            acc = accuracy_score(y, y_pred)
-            f1 = f1_score(y, y_pred)
-
-            # Store loss, accuracy and f1 score for plotting
-            cum_loss.append(loss.item())
-            cum_acc.append(acc)
-            cum_f1.append(f1)
-
-            # print(f"Pred: '{y_pred}', G-Truth: '{y}', Loss: '{loss.item()}', Acc: '{acc}', F1: '{f1}'")
-
-            tqdm_bar.set_description(f"[POLARITY] Epoch {epoch+1}/{epochs} - Loss: {loss.item():.3f} - Accuracy: {acc:.3f} - F1: {f1:.3f}")
-
-        # Save the model
-        model.save('weights/polarity_classifier_paper.pt')
-
-        # Plot loss, accuracy and f1 score
-        plot_data(cum_loss, cum_acc, cum_f1, title="Poplarity train results", save_path="plots/polarity_train_set")
-
-    # Test
-    model.eval()
-
-    with torch.no_grad():
-        for x, y, l in test_loader:
-            x = x.to(device)
-            y = y.to(device)
-
-            y_pred = model(x, l)
-            loss = criterion(y_pred, y)
-
-            y_pred = torch.round(torch.sigmoid(y_pred)).cpu().detach().numpy()
-            y = y.cpu().detach().numpy()
-
-            acc = accuracy_score(y, y_pred)
-            f1 = f1_score(y, y_pred)
+    # Create variables to store the loss, accuracy and f1 score
+    base_dict = {'loss': [], 'accuracy': [], 'f1': []}
+    data = {'train': copy.deepcopy(base_dict), 'test': copy.deepcopy(base_dict)}
     
-    # Print results
-    print(f"[POLARITY] Achieved accuracy: {acc:.3f}\nAchieved f1 score: {f1:.3f}")
+    # Start timer
+    start_time = time.time()
 
-    return model
+    # Train the model
+    for epoch in range(epochs):
+        # Train
+        train_metrics = train_single_epoch(model, train_loader, optimizer, criterion, device)
+        for key in train_metrics.keys():
+            data['train'][key].append(train_metrics[key])
+
+        # Test
+        test_metrics = test_single_epoch(model, test_loader, criterion, device)
+        for key in test_metrics.keys():
+            data['test'][key].append(test_metrics[key])
+
+        # Print results
+        make_log_print("Train", (epoch+1, epochs), time.time() - start_time, train_metrics, test_metrics)
+
+        # Save the best model
+        if test_metrics['accuracy'] > best_acc:
+            best_acc = test_metrics['accuracy']
+            best_f1 = test_metrics['f1']
+            best_loss = test_metrics['loss']
+            best_model = copy.deepcopy(model)
+    
+    make_log_print("Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})
+
+    # Save the model
+    best_model.save(WEIGHTS_PATH_POLARITY)
+
+    # Plot loss, accuracy and f1 score
+    plot_data(data, title="Polarity train results", save_path=PLOTS_PATH_POLARITY)
+
+    return best_model

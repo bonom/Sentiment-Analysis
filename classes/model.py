@@ -1,44 +1,48 @@
 import os
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
+#################################################
+# Paper implementation
+#################################################
 class BiLSTM_CNN_Attention(nn.Module):
-    def __init__(self, vocab_size, emb_dim, lstm_hidden_dim, lstm_num_layers, cnn_num_filters, cnn_filter_sizes, num_classes):
+    def __init__(self, vocab_size, emb_dim, cnn_num_filters, cnn_filter_sizes, lstm_hidden_dim, num_classes):
         super().__init__()
         self.embedding = nn.Embedding(vocab_size, emb_dim)
-        self.lstm = nn.LSTM(emb_dim, lstm_hidden_dim, num_layers=lstm_num_layers, bidirectional=True)
-        self.cnn = nn.ModuleList([nn.Conv1d(lstm_hidden_dim * 2, cnn_num_filters, kernel_size=fs) for fs in cnn_filter_sizes])
-        self.attention = nn.Linear(lstm_hidden_dim * 2, 1)
-        self.fc = nn.Linear(cnn_num_filters * len(cnn_filter_sizes), num_classes)
+        self.cnn = nn.ModuleList([nn.Conv1d(in_channels=emb_dim,
+                                           out_channels=cnn_num_filters,
+                                           kernel_size=fs,
+                                           padding=fs//2)
+                                 for fs in cnn_filter_sizes])
 
-    def forward(self, x, lengths):
-        # Embedding layer
-        x = self.embedding(x)
-        x = pack_padded_sequence(x, lengths, batch_first=True)
-
-        # LSTM layer
-        x, _ = self.lstm(x)
-        x, _ = pad_packed_sequence(x, batch_first=True)
-
-        # Shape is 4096, _, 256 but needed is 4096, 256, _
-        # So we need to transpose the last two dimensions
-        x = x.transpose(1, 2)    
+        self.lstm = nn.LSTM(cnn_num_filters*len(cnn_filter_sizes), lstm_hidden_dim, bidirectional=True, batch_first=True)
+        self.attention = nn.Linear(2*lstm_hidden_dim, 1)
+        self.fc = nn.Linear(2*lstm_hidden_dim, num_classes)
         
-        # CNN layer
+    def forward(self, x, lengths):
+        x = self.embedding(x) # (batch_size, seq_len, emb_dim)
+        x = x.permute(0, 2, 1) # (batch_size, emb_dim, seq_len)
+        
         temp = []
         for conv in self.cnn:
             temp.append(nn.functional.relu(conv(x)))
-        x = torch.cat(temp, dim=1)
-        # x = torch.cat([nn.functional.relu(conv(x)) for conv in self.cnn], dim=1)
+        cnn_out = torch.cat(temp, dim=1) # (batch_size, cnn_num_filters*len(cnn_filter_sizes), new_seq_len)
         
-        # Attention layer
-        x = x * self.attention(x)
+        cnn_out = cnn_out.permute(0, 2, 1) # (batch_size, new_seq_len, cnn_num_filters*len(cnn_filter_sizes))
         
-        # Classifier layer
-        x = self.fc(x)
+        cnn_out = nn.utils.rnn.pack_padded_sequence(cnn_out, lengths, batch_first=True)
+        lstm_out, _ = self.lstm(cnn_out)
+        lstm_out, _ = nn.utils.rnn.pad_packed_sequence(lstm_out, batch_first=True) # (batch_size, seq_len, 2*lstm_hidden_dim)
         
-        return x
+        attention_weights = nn.functional.softmax(self.attention(lstm_out), dim=1) # (batch_size, seq_len, 1)
+        lstm_out = lstm_out * attention_weights # (batch_size, seq_len, 2*lstm_hidden_dim)
+        lstm_out = lstm_out.sum(dim=1) # (batch_size, 2*lstm_hidden_dim)
+        out = self.fc(lstm_out) # (batch_size, num_classes)
+        
+        return out
+
 
     def save(self, path:str) -> None:
         print(f"Saving model to '{os.path.abspath(path)}'")
@@ -52,6 +56,9 @@ class BiLSTM_CNN_Attention(nn.Module):
             print("[WARNING] Model architecture does not match, loading only weights")
             self.load_state_dict(torch.load(path, map_location=torch.device('cpu')))
 
+#################################################
+# Personal implementation
+#################################################
 
 class Attention(nn.Module):
     def __init__(self, hidden_size:int, dropout_pr:float = 0.1):

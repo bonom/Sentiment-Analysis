@@ -8,26 +8,29 @@ from classes.paper_implementation import train_subjectivity_classification as tr
 
 if __name__ == '__main__':
     check_downloads()
-    
-    ### Baseline classifiers
-    print(f"--- Running baseline classifiers ---")
-    # baseline_main()
-
-    ### Custom classifiers
-    print(f"--- Running custom classifiers ---")
     # Hyperparameters
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    # Train subjectivity classifier with custom implementation
-    # subj_class = train_subjectivity_classification(device=device)
-
-    # Train polarity classifier with custom implementation
-    # pol_class = train_polarity_classification(epochs=5, device=device)
-
-    # Train subjectivity classifier with custom implementation
-    subj_class = train_subjectivity_classification_paper(device=device)
-
-    # Train polarity classifier with custom implementation
-    pol_class = train_polarity_classification_paper(device=device)
-
+    ### Baseline classifiers
+    print(f"--- Running baseline classifiers ---")
+    # baseline_main()
     
+    ### Custom classifiers
+    print(f"--- Running paper classifiers ---")
+
+    # Train subjectivity classifier with custom implementation
+    subj_class = train_subjectivity_classification_paper(epochs=100, device=device)
+
+    # Train polarity classifier with custom implementation
+    pol_class = train_polarity_classification_paper(epochs=100, device=device)
+
+    ### Custom classifiers
+    print(f"--- Running custom classifiers ---")    
+
+    # Train subjectivity classifier with custom implementation
+    subj_class = train_subjectivity_classification(epochs=100, device=device)
+
+    # Train polarity classifier with custom implementation
+    pol_class = train_polarity_classification(epochs=100, device=device)
+    
+
