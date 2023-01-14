@@ -20,19 +20,19 @@ if __name__ == '__main__':
         print(f"--- Running paper classifiers ---")
 
         # Train subjectivity classifier with custom implementation
-        subj_class = train_subjectivity_classification_paper(epochs=100, device=device)
+        subj_class = train_subjectivity_classification_paper(device=device)
 
         # Train polarity classifier with custom implementation
-        pol_class = train_polarity_classification_paper(epochs=100, device=device)
+        pol_class = train_polarity_classification_paper(device=device)
 
         ### Custom classifiers
         print(f"--- Running custom classifiers ---")    
 
         # Train subjectivity classifier with custom implementation
-        subj_class = train_subjectivity_classification(epochs=100, device=device)
+        subj_class = train_subjectivity_classification(device=device)
 
         # Train polarity classifier with custom implementation
-        pol_class = train_polarity_classification(epochs=100, device=device)
+        pol_class = train_polarity_classification(device=device)
     except Exception as e:
         variables = list(locals().keys()) + list(globals().keys())
         for variable in variables:
