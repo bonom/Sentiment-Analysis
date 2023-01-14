@@ -34,7 +34,7 @@ if __name__ == '__main__':
         # Train polarity classifier with custom implementation
         pol_class = train_polarity_classification(epochs=100, device=device)
     except Exception as e:
-        variables = locals().keys() + globals().keys()
+        variables = list(locals().keys()) + list(globals().keys())
         for variable in variables:
             if variable != 'e' and variable != 'torch':
                 if variable in locals().keys():
