@@ -24,7 +24,7 @@ if not os.path.exists(WEIGHTS_PATH):
 if not os.path.exists(PLOTS_PATH):
     os.makedirs(PLOTS_PATH)
     
-def train_subjectivity_classification(epochs:int = 40, lr:float = 0.001, weight_decay:float = 0.0001, device:str = 'cpu') -> nn.Module:
+def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_decay:float = 0.0001, device:str = 'cpu') -> nn.Module:
     """
     Do subjectivity classification using a custom classifier.
     """    
@@ -75,9 +75,13 @@ def train_subjectivity_classification(epochs:int = 40, lr:float = 0.001, weight_
     for epoch in range(epochs):
         # Train
         train_metrics = train_single_epoch(model, train_loader, optimizer, criterion, device)
+        for key in train_metrics.keys():
+            data['train'][key].append(train_metrics[key])
 
         # Test
         test_metrics = test_single_epoch(model, test_loader, criterion, device)
+        for key in test_metrics.keys():
+            data['test'][key].append(test_metrics[key])
 
         # Print results
         make_log_print("Train", (epoch+1, epochs), time.time() - start_time, train_metrics, test_metrics)
