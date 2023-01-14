@@ -21,7 +21,7 @@ class BiLSTM_CNN_Attention(nn.Module):
         self.attention = nn.Linear(2*lstm_hidden_dim, 1)
         self.fc = nn.Linear(2*lstm_hidden_dim, num_classes)
         
-    def forward(self, x:torch.Tensor, lengths:torch.Tensor) -> torch.Tensor:
+    def forward(self, x:torch.Tensor, lengths:torch.Tensor, heatmap: bool = False) -> torch.Tensor:
         x = self.embedding(x) # (batch_size, seq_len, emb_dim)
         x = x.permute(0, 2, 1) # (batch_size, emb_dim, seq_len)
         
@@ -35,14 +35,17 @@ class BiLSTM_CNN_Attention(nn.Module):
         cnn_out = nn.utils.rnn.pack_padded_sequence(cnn_out, lengths.cpu().detach().numpy(), batch_first=True)
         lstm_out, _ = self.lstm(cnn_out)
         lstm_out, _ = nn.utils.rnn.pad_packed_sequence(lstm_out, batch_first=True) # (batch_size, seq_len, 2*lstm_hidden_dim)
-        
+
         attention_weights = nn.functional.softmax(self.attention(lstm_out), dim=1) # (batch_size, seq_len, 1)
+
+        if heatmap:
+            return attention_weights
+
         lstm_out = lstm_out * attention_weights # (batch_size, seq_len, 2*lstm_hidden_dim)
         lstm_out = lstm_out.sum(dim=1) # (batch_size, 2*lstm_hidden_dim)
         out = self.fc(lstm_out) # (batch_size, num_classes)
         
         return out
-
 
     def save(self, path:str) -> None:
         print(f"Saving model to '{os.path.abspath(path)}'")
@@ -99,7 +102,7 @@ class LSTM(nn.Module):
         # Then we need a classifier layer to convert our LSTM output to our desired output size
         self.out = nn.Linear(hidden_size * 2, output_size)
 
-    def forward(self, x:torch.Tensor, lengths:torch.Tensor) -> torch.Tensor:
+    def forward(self, x:torch.Tensor, lengths:torch.Tensor, heatmap:bool = False) -> torch.Tensor:
         # Embedding layer
         x = self.embedding(x)
         x = pack_padded_sequence(x, lengths.cpu().detach().numpy(), batch_first=True)
@@ -111,6 +114,9 @@ class LSTM(nn.Module):
         # Dropout layer
         x = self.dropout(x)
 
+        if heatmap:
+            return self.attention(x)
+            
         # Attention layer
         x = x * self.attention(x)
 

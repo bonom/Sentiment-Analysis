@@ -19,6 +19,11 @@ PLOTS_PATH = os.path.join('plots', 'custom_implementation')
 PLOTS_PATH_SUBJECTIVITY = os.path.join(PLOTS_PATH, 'subjectivity_train_loss_accuracy_f1.png')
 PLOTS_PATH_POLARITY = os.path.join(PLOTS_PATH, 'polarity_train_loss_accuracy_f1.png')
 
+if not os.path.exists(WEIGHTS_PATH):
+    os.makedirs(WEIGHTS_PATH)
+if not os.path.exists(PLOTS_PATH):
+    os.makedirs(PLOTS_PATH)
+    
 def train_subjectivity_classification(epochs:int = 40, lr:float = 0.001, weight_decay:float = 0.0001, device:str = 'cpu') -> nn.Module:
     """
     Do subjectivity classification using a custom classifier.
