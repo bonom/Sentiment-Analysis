@@ -128,7 +128,7 @@ def make_log_print(status:str = "Train", epoch:tuple = None, timer:float = None,
         print(f"  Test loss {test_metrics['loss']:.3f}, Test accuracy {test_metrics['accuracy']:.3f}, Test f1 {test_metrics['f1']:.3f}")
 
     if timer is not None:
-        print(f"  Time elapsed: {_chrono} - ETA: {_eta} - Time per epoch: {round(timer/_actual_epoch)} seconds")
+        print(f"  Time elapsed: {_chrono} - ETA: {_eta} - Time per epoch: {timer/_actual_epoch:.2f} seconds")
 
     if args is not None:
         for arg in args:
