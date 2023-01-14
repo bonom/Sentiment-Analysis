@@ -88,9 +88,9 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
 
         # Save the best model
         if test_metrics['accuracy'] > best_acc:
-            best_acc = test_metrics['acc']
+            best_acc = test_metrics['accuracy']
             best_f1 = test_metrics['f1']
-            best_loss = test_metrics['accuracy']
+            best_loss = test_metrics['loss']
             best_model = copy.deepcopy(model)
 
     make_log_print("Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})
