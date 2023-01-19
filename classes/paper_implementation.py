@@ -11,16 +11,16 @@ from classes.model import BiLSTM_CNN_Attention
 from nltk.corpus import movie_reviews, subjectivity
 from classes.commons import create_dataset, create_word_2_index, collate_fn, make_log_print, plot_data, test_single_epoch, train_single_epoch
 
-WEIGHTS_PATH = os.path.join('weights', 'paper_implementation')
-WEIGHTS_PATH_SUBJECTIVITY = os.path.join(WEIGHTS_PATH, 'subjectivity_classification.pt')
-WEIGHTS_PATH_POLARITY = os.path.join(WEIGHTS_PATH, 'polarity_classification.pt')
+WEIGHTS_PATH_PAPER = os.path.join('weights', 'paper_implementation')
+WEIGHTS_PATH_SUBJECTIVITY = os.path.join(WEIGHTS_PATH_PAPER, 'subjectivity_classification.pt')
+WEIGHTS_PATH_POLARITY = os.path.join(WEIGHTS_PATH_PAPER, 'polarity_classification.pt')
 
 PLOTS_PATH = os.path.join('plots', 'paper_implementation')
 PLOTS_PATH_SUBJECTIVITY = os.path.join(PLOTS_PATH, 'subjectivity_train_loss_accuracy_f1.png')
 PLOTS_PATH_POLARITY = os.path.join(PLOTS_PATH, 'polarity_train_loss_accuracy_f1.png')
 
-if not os.path.exists(WEIGHTS_PATH):
-    os.makedirs(WEIGHTS_PATH)
+if not os.path.exists(WEIGHTS_PATH_PAPER):
+    os.makedirs(WEIGHTS_PATH_PAPER)
 if not os.path.exists(PLOTS_PATH):
     os.makedirs(PLOTS_PATH)
 
