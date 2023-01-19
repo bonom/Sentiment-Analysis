@@ -19,10 +19,11 @@ PLOTS_PATH_PAPER = os.path.join('plots', 'paper_implementation')
 PLOTS_PATH_SUBJECTIVITY = os.path.join(PLOTS_PATH_PAPER, 'subjectivity_train_loss_accuracy_f1.png')
 PLOTS_PATH_POLARITY = os.path.join(PLOTS_PATH_PAPER, 'polarity_train_loss_accuracy_f1.png')
 
-if not os.path.exists(WEIGHTS_PATH_PAPER):
-    os.makedirs(WEIGHTS_PATH_PAPER)
-if not os.path.exists(PLOTS_PATH_PAPER):
-    os.makedirs(PLOTS_PATH_PAPER)
+def make_dirs():
+    if not os.path.exists(WEIGHTS_PATH_PAPER):
+        os.makedirs(WEIGHTS_PATH_PAPER)
+    if not os.path.exists(PLOTS_PATH_PAPER):
+        os.makedirs(PLOTS_PATH_PAPER)
 
 def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_decay:float = 0.0001, device:str = 'cpu') -> nn.Module:
     """
