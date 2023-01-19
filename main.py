@@ -20,10 +20,10 @@ if __name__ == '__main__':
         print(f"--- Running paper classifiers ---")
 
         # Train subjectivity classifier with custom implementation
-        # subj_class = train_subjectivity_classification_paper(epochs=100, device=device)
+        subj_class = train_subjectivity_classification_paper(epochs=100, device=device)
 
         # Train polarity classifier with custom implementation
-        # pol_class = train_polarity_classification_paper(device=device)
+        pol_class = train_polarity_classification_paper(device=device)
 
         ### Custom classifiers
         print(f"--- Running custom classifiers ---")    
