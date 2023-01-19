@@ -22,7 +22,7 @@ if __name__ == '__main__':
         print(f"--- Running paper classifiers ---")
 
         # Train subjectivity classifier with custom implementation
-        subj_class = paper_train_subjectivity_classification(epochs=100, device=device)
+        subj_class = paper_train_subjectivity_classification(epochs=40, device=device)
 
         # Train polarity classifier with custom implementation
         pol_class = paper_train_polarity_classification(device=device)
@@ -31,7 +31,7 @@ if __name__ == '__main__':
         print(f"--- Running custom classifiers ---")    
 
         # Train subjectivity classifier with custom implementation
-        subj_class = train_subjectivity_classification(epochs=100, device=device)
+        subj_class = train_subjectivity_classification(epochs=40, device=device)
 
         # Train polarity classifier with custom implementation
         pol_class = train_polarity_classification(device=device)

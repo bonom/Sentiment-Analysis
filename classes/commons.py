@@ -243,7 +243,6 @@ def plot_data(data:dict, title="Loss, Accuracy & F1 Score", save_path:str=None):
     accuracy = (train_data['accuracy'], test_data['accuracy'])
     f1_score = (train_data['f1'], test_data['f1'])
 
-    plt.close('all')
     # create a subfigure with 2 rows and 3 columns
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
 
