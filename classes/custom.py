@@ -186,3 +186,10 @@ def train_polarity_classification(epochs: int = 20, lr: float = 0.001, weight_de
     plot_data(data, title="Polarity train results", save_path=PLOTS_PATH_POLARITY)
 
     return best_model
+
+def run_custom(device: str = 'cpu'):
+    # Train subjectivity classifier with custom implementation
+    subj_class = train_subjectivity_classification(epochs=40, device=device)
+
+    # Train polarity classifier with custom implementation
+    pol_class = train_polarity_classification(device=device)

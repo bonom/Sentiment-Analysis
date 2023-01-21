@@ -103,7 +103,7 @@ def train_polarity_classifier(subj_classifier, subj_vectorizer):
     return scores, classifier, vectorizer
 
 
-def main():
+def run_baseline():
     scores, classifier, vectorizer = train_subjectivity_classifier()
     print(f"Subjectivity classifier scores: {np.mean(scores):.2f} +- {np.std(scores):.2f}")
     
