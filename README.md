@@ -3,8 +3,9 @@ This repository contains an implementation of a sentiment analysis model for tex
 ## Requirements
  - Python 3.9
  - PyTorch 1.13
- - Numpy
+ - matplotlib
  - nltk
+ - numpy
  - scikit-learn
 
 ## Model
