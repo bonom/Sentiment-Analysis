@@ -8,7 +8,10 @@ This repository contains an implementation of a sentiment analysis model for tex
  - numpy
  - scikit-learn
 
-## Model
+## Models
+
+### Baseline model
+The baseline model is a Naive Bayes classifier, which is implemented using the `sklearn` library. 
 
 ### Paper proposal
 The model is composed of three main parts: a Bi-Directional LSTM, a CNN with attention mechanism, and a classifier. The LSTM is used to capture the temporal dependencies in the input sentence, while the CNN is used to capture the local dependencies in the input sentence. The attention mechanism is used to weigh the importance of each feature in the sentence. The classifier is used to make the final decision on the polarity and subjectivity of the input sentence.
@@ -25,13 +28,13 @@ The script will train the following models:
  1. Baseline model using a Naive Bayes classifier
  2. Implementation of a paper proposal [1]
  3. Personal custom model
-You can find the code for the models in the models.py file and the script for training them in the main.py file.
+You can find the code for the models in the models.py file and the script for training them in the `main.py` file.
 
 ## Results
-The results will be printed in the console, weights will be saved in the `weights` folder and plots of loss, accuracy and f1 score will be saved in the `plots` folder.
+The results will be printed in the console, weights will be saved in the *weights* folder and plots of loss, accuracy and f1 score will be saved in the *plots* folder.
 
 ## Note
-The datasets used for the training and testing are the nltk `subjectivity` and `movie_reviews` datasets.
+The datasets used for the training and testing are the `nltk` *subjectivity* and *movie_revirews* datasets.
 
 ## References
 [1] F. Sun and N. Chu, “Text sentiment analysis based on cnn-bilstm-attention model,” in *2020 International Conference on Robots Intelligent System (ICRIS)*, 2020, pp. 749–752.
