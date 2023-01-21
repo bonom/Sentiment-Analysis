@@ -30,7 +30,7 @@ You can find the code for the models in the models.py file and the script for tr
 The results will be printed in the console, weights will be saved in the `weights` folder and plots of loss, accuracy and f1 score will be saved in the `plots` folder.
 
 ## Note
-The datasets used for the training and testing are the nltk subjectivity and movie_reviews dataset.
+The datasets used for the training and testing are the nltk `subjectivity` and `movie_reviews` datasets.
 
 ## References
 [1] F. Sun and N. Chu, “Text sentiment analysis based on cnn-bilstm-attention model,” in *2020 International Conference on Robots Intelligent System (ICRIS)*, 2020, pp. 749–752.
