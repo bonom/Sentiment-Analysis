@@ -20,7 +20,7 @@ The model is composed of three main parts: a Bi-Directional LSTM, a CNN with att
 The custom model consists of three main components: an Embedding layer, a Bi-directional LSTM layer, and a Linear layer for classification. The Embedding layer is used to convert the input into a vector representation, which is then passed through the LSTM layer. The LSTM layer is used to capture the contextual information in the text, and the outputs are then passed through the Linear layer for classification. Additionally, an Attention layer is also implemented to weigh the importance of different parts of the input text for the final classification. The model is trained using a combination of a CrossEntropy loss and Adam optimizer. It's main purpose is to classify a piece of text as subjective or objective.
 
 ## Getting started
- 1. Clone the repository: `git clone https://github.com/<username>/sentiment-analysis-pytorch.git`
+ 1. Clone the repository: `git clone https://github.com/bonom/Sentiment-Analysis.git`
  2. Install the dependencies by running: `pip install -r requirements.txt`
  3. Run the script: `python main.py`
 
