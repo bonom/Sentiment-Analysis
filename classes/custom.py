@@ -103,7 +103,7 @@ def make_dirs():
     if not os.path.exists(PLOTS_PATH_CUSTOM):
         os.makedirs(PLOTS_PATH_CUSTOM)
     
-def train_subjectivity_classification(epochs:int = 30, lr:float = 1e-2, weight_decay:float = 0.0001, device:str = 'cpu') -> nn.Module:
+def train_subjectivity_classification(epochs:int = 30, lr:float = 1e-2,device:str = 'cpu') -> nn.Module:
     """
     Do subjectivity classification using a custom classifier.
     """    
