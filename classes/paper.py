@@ -120,7 +120,7 @@ def paper_train_subjectivity_classification(epochs:int = 30, lr:float = 0.01, we
     # Create a custom classifier
     model = BiLSTM_CNN_Attention(vocab_size=len(word2index), emb_dim=128, lstm_hidden_dim=128, cnn_num_filters=3, cnn_filter_sizes=(2,4,6), num_classes=1).to(device)
     criterion = torch.nn.BCEWithLogitsLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)#, weight_decay=weight_decay)
     # Usse a step scheduler
     # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
     # scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda epoch: 0.95 ** epoch)
@@ -220,9 +220,9 @@ def paper_train_polarity_classification(epochs: int = 30, lr: float = 1e-2, weig
     # Create a custom classifier
     model = BiLSTM_CNN_Attention(vocab_size=len(word2index), emb_dim=128, lstm_hidden_dim=128, cnn_num_filters=3, cnn_filter_sizes=(2,4,6), num_classes=1).to(device)
     criterion = torch.nn.BCEWithLogitsLoss().to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)#, weight_decay=weight_decay)
     # Use the most efficient scheduler
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.1, patience=5, verbose=True)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=5, verbose=True)
 
     # Create variables to store the best model
     best_acc = 0
@@ -260,7 +260,7 @@ def paper_train_polarity_classification(epochs: int = 30, lr: float = 1e-2, weig
             best_model = copy.deepcopy(model)
         
         # Update the scheduler
-        scheduler.step(test_metrics['accuracy'])
+        scheduler.step(test_metrics['loss'])
 
     print()
     make_log_print("Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})
