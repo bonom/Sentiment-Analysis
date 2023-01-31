@@ -175,7 +175,7 @@ def paper_train_subjectivity_classification(epochs:int = 30, lr:float = 0.01, we
     
     return best_model
 
-def paper_train_polarity_classification(epochs: int = 100, lr: float = 0.01, weight_decay: float = 1e-6, device: str = 'cpu') -> nn.Module:
+def paper_train_polarity_classification(epochs: int = 100, lr: float = 0.001, weight_decay: float = 1e-6, device: str = 'cpu') -> nn.Module:
     """
     Do polarity classification using a trained classifier.
     """
