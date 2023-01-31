@@ -217,7 +217,7 @@ def paper_train_polarity_classification(epochs: int = 30, lr: float = 1e-3, devi
     # Create a custom classifier
     model = BiLSTM_CNN_Attention(vocab_size=len(word2index), emb_dim=128, lstm_hidden_dim=128, cnn_num_filters=3, cnn_filter_sizes=(2,4,6), num_classes=1).to(device)
     criterion = torch.nn.BCEWithLogitsLoss().to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    optimizer = torch.optim.SGD(model.parameters(), lr=lr)
 
     # Create variables to store the best model
     best_acc = 0
