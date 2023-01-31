@@ -23,22 +23,20 @@ PLOTS_PATH_POLARITY = os.path.join(PLOTS_PATH_CUSTOM, 'polarity_train_loss_accur
 
 
 class Attention(nn.Module):
-    def __init__(self, hidden_size:int, dropout_pr:float = 0.1):
+    def __init__(self, hidden_size:int):
         super(Attention, self).__init__()
         self.hidden_size = hidden_size
 
-        self.dropout = nn.Dropout(dropout_pr)
         self.attn = nn.Linear(hidden_size, 1)
         self.softmax = nn.Softmax(dim=1)
     
     def forward(self, x):
-        x = self.dropout(x)
         x = self.attn(x)
         x = self.softmax(x)
         return x
 
 class LSTM(nn.Module):
-    def __init__(self, input_size:int, hidden_size:int, emb_size:int, output_size:int = 1, n_layers:int = 2, padding_idx:int = 0, dropout_pr:float = 0.5) -> None:
+    def __init__(self, input_size:int, hidden_size:int, emb_size:int, output_size:int = 1, n_layers:int = 2, padding_idx:int = 0, dropout_pr:float = 0.2) -> None:
         super(LSTM, self).__init__()
         self.n_layers = n_layers
         self.hidden_size = hidden_size
