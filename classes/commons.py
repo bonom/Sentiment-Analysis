@@ -47,10 +47,11 @@ def check_downloads() -> None:
 #################################################
 
 def create_dataset(data, labels):
-    kfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-    for train_index, test_index in kfold.split(data, labels):
-        train_set_x, test_set_x = [data[i] for i in train_index], [data[i] for i in test_index]
-        train_set_y, test_set_y = [labels[i] for i in train_index], [labels[i] for i in test_index]
+    # Create the dataset
+    train_set_x = data[:int(len(data)*0.8)]
+    train_set_y = labels[:int(len(data)*0.8)]
+    test_set_x = data[int(len(data)*0.8):]
+    test_set_y = labels[int(len(data)*0.8):]
     
     return train_set_x, train_set_y, test_set_x, test_set_y
 

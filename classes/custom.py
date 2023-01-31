@@ -5,10 +5,11 @@ import torch
 import numpy as np
 import torch.nn as nn
 
-from classes.model import LSTM
+# from classes.model import LSTM
 from torch.utils.data import DataLoader
 from classes.dataset import CustomDataset
 from nltk.corpus import movie_reviews, subjectivity
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from classes.commons import create_dataset, create_word_2_index, collate_fn, make_log_print, plot_data, test_single_epoch, train_single_epoch
 
 WEIGHTS_PATH_CUSTOM = os.path.join('weights', 'custom_implementation')
@@ -18,6 +19,84 @@ WEIGHTS_PATH_POLARITY = os.path.join(WEIGHTS_PATH_CUSTOM, 'polarity_classificati
 PLOTS_PATH_CUSTOM = os.path.join('plots', 'custom_implementation')
 PLOTS_PATH_SUBJECTIVITY = os.path.join(PLOTS_PATH_CUSTOM, 'subjectivity_train_loss_accuracy_f1.png')
 PLOTS_PATH_POLARITY = os.path.join(PLOTS_PATH_CUSTOM, 'polarity_train_loss_accuracy_f1.png')
+
+
+class Attention(nn.Module):
+    def __init__(self, hidden_size:int, dropout_pr:float = 0.1):
+        super(Attention, self).__init__()
+        self.hidden_size = hidden_size
+
+        self.dropout = nn.Dropout(dropout_pr)
+        self.attn = nn.Linear(hidden_size, 1)
+        self.softmax = nn.Softmax(dim=1)
+    
+    def forward(self, x):
+        x = self.dropout(x)
+        x = self.attn(x)
+        x = self.softmax(x)
+        return x
+
+class LSTM(nn.Module):
+    def __init__(self, input_size:int, hidden_size:int, emb_size:int, output_size:int = 1, n_layers:int = 2, padding_idx:int = 0, dropout_pr:float = 0.5) -> None:
+        super(LSTM, self).__init__()
+        self.n_layers = n_layers
+        self.hidden_size = hidden_size
+        self.output_size = output_size
+
+        # First we need an embedding layer to convert our input tokens into vectors
+        self.embedding = nn.Embedding(input_size, emb_size, padding_idx=padding_idx)
+
+        # Then we need our memory layer, which is a LSTM in this case
+        # self.memory = nn.LSTM(input_size=emb_size, hidden_size=hidden_size, num_layers=n_layers, bidirectional=True, batch_first=True)
+        # Can also be used with GRU, to test it out, just uncomment the line below and comment the line above
+        self.memory = nn.GRU(input_size=emb_size, hidden_size=hidden_size, num_layers=n_layers, bidirectional=True, batch_first=True)
+
+        # Then we need a dropout layer to prevent overfitting
+        self.dropout = nn.Dropout(dropout_pr)
+
+        # Then we need our attention layer
+        self.attention = Attention(hidden_size * 2, dropout_pr)
+
+        # Then we need a classifier layer to convert our LSTM output to our desired output size
+        self.out = nn.Linear(hidden_size * 2, output_size)
+
+    def forward(self, x:torch.Tensor, lengths:torch.Tensor, heatmap:bool = False) -> torch.Tensor:
+        # Embedding layer
+        x = self.embedding(x)
+        x = pack_padded_sequence(x, lengths.cpu().detach().numpy(), batch_first=True)
+
+        # LSTM layer
+        x, _ = self.memory(x)
+        x, _ = pad_packed_sequence(x, batch_first=True)
+
+        # Dropout layer
+        x = self.dropout(x)
+
+        if heatmap:
+            return self.attention(x)
+            
+        # Attention layer
+        x = x * self.attention(x)
+
+        # Summing over the sequence dimension
+        x = torch.sum(x, dim=1)
+
+        # Classifier layer
+        x = self.out(x)
+
+        return x
+    
+    def save(self, path:str) -> None:
+        print(f"Saving model to '{os.path.abspath(path)}'")
+        torch.save(self.state_dict(), path)
+    
+    def load(self, path:str) -> None:
+        print(f"Loading model from '{os.path.abspath(path)}'")
+        try:
+            self.load_state_dict(torch.load(path))
+        except RuntimeError:
+            print("[WARNING] Model architecture does not match, loading only weights")
+            self.load_state_dict(torch.load(path, map_location=torch.device('cpu')))
 
 def make_dirs():
     if not os.path.exists(WEIGHTS_PATH_CUSTOM):
@@ -94,7 +173,9 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
             best_loss = test_metrics['loss']
             best_model = copy.deepcopy(model)
 
+    print()
     make_log_print("Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})
+    print()
 
     # Save the model
     best_model.save(WEIGHTS_PATH_SUBJECTIVITY)
@@ -177,7 +258,9 @@ def train_polarity_classification(epochs: int = 20, lr: float = 0.001, weight_de
             best_loss = test_metrics['loss']
             best_model = copy.deepcopy(model)
     
+    print()
     make_log_print("Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})
+    print()
 
     # Save the model
     best_model.save(WEIGHTS_PATH_POLARITY)

@@ -7,7 +7,7 @@ import torch.nn as nn
 
 from torch.utils.data import DataLoader
 from classes.dataset import CustomDataset
-from classes.model import BiLSTM_CNN_Attention
+# from classes.model import BiLSTM_CNN_Attention
 from nltk.corpus import movie_reviews, subjectivity
 from classes.commons import create_dataset, create_word_2_index, collate_fn, make_log_print, plot_data, test_single_epoch, train_single_epoch
 
@@ -18,6 +18,61 @@ WEIGHTS_PATH_POLARITY = os.path.join(WEIGHTS_PATH_PAPER, 'polarity_classificatio
 PLOTS_PATH_PAPER = os.path.join('plots', 'paper_implementation')
 PLOTS_PATH_SUBJECTIVITY = os.path.join(PLOTS_PATH_PAPER, 'subjectivity_train_loss_accuracy_f1.png')
 PLOTS_PATH_POLARITY = os.path.join(PLOTS_PATH_PAPER, 'polarity_train_loss_accuracy_f1.png')
+
+#################################################
+# Paper implementation
+#################################################
+class BiLSTM_CNN_Attention(nn.Module):
+    def __init__(self, vocab_size, emb_dim, cnn_num_filters, cnn_filter_sizes, lstm_hidden_dim, num_classes):
+        super().__init__()
+        self.embedding = nn.Embedding(vocab_size, emb_dim)
+        self.cnn = nn.ModuleList([nn.Conv1d(in_channels=emb_dim,
+                                           out_channels=cnn_num_filters,
+                                           kernel_size=fs,
+                                           padding=fs//2)
+                                 for fs in cnn_filter_sizes])
+
+        self.lstm = nn.LSTM(cnn_num_filters*len(cnn_filter_sizes), lstm_hidden_dim, bidirectional=True, batch_first=True)
+        self.attention = nn.Linear(2*lstm_hidden_dim, 1)
+        self.fc = nn.Linear(2*lstm_hidden_dim, num_classes)
+        
+    def forward(self, x:torch.Tensor, lengths:torch.Tensor, heatmap: bool = False) -> torch.Tensor:
+        x = self.embedding(x) # (batch_size, seq_len, emb_dim)
+        x = x.permute(0, 2, 1) # (batch_size, emb_dim, seq_len)
+        
+        temp = []
+        for conv in self.cnn:
+            temp.append(nn.functional.relu(conv(x)))
+        cnn_out = torch.cat(temp, dim=1) # (batch_size, cnn_num_filters*len(cnn_filter_sizes), new_seq_len)
+        
+        cnn_out = cnn_out.permute(0, 2, 1) # (batch_size, new_seq_len, cnn_num_filters*len(cnn_filter_sizes))
+        
+        cnn_out = nn.utils.rnn.pack_padded_sequence(cnn_out, lengths.cpu().detach().numpy(), batch_first=True)
+        lstm_out, _ = self.lstm(cnn_out)
+        lstm_out, _ = nn.utils.rnn.pad_packed_sequence(lstm_out, batch_first=True) # (batch_size, seq_len, 2*lstm_hidden_dim)
+
+        attention_weights = nn.functional.softmax(self.attention(lstm_out), dim=1) # (batch_size, seq_len, 1)
+
+        if heatmap:
+            return attention_weights
+
+        lstm_out = lstm_out * attention_weights # (batch_size, seq_len, 2*lstm_hidden_dim)
+        lstm_out = lstm_out.sum(dim=1) # (batch_size, 2*lstm_hidden_dim)
+        out = self.fc(lstm_out) # (batch_size, num_classes)
+        
+        return out
+
+    def save(self, path:str) -> None:
+        print(f"Saving model to '{os.path.abspath(path)}'")
+        torch.save(self.state_dict(), path)
+    
+    def load(self, path:str) -> None:
+        print(f"Loading model from '{os.path.abspath(path)}'")
+        try:
+            self.load_state_dict(torch.load(path))
+        except RuntimeError:
+            print("[WARNING] Model architecture does not match, loading only weights")
+            self.load_state_dict(torch.load(path, map_location=torch.device('cpu')))
 
 def paper_make_dirs():
     if not os.path.exists(WEIGHTS_PATH_PAPER):
@@ -94,7 +149,9 @@ def paper_train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, w
             best_loss = test_metrics['loss']
             best_model = copy.deepcopy(model)
 
+    print()
     make_log_print("Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})
+    print()
 
     # Save the model
     best_model.save(WEIGHTS_PATH_SUBJECTIVITY)
@@ -179,7 +236,9 @@ def paper_train_polarity_classification(epochs: int = 20, lr: float = 0.001, wei
             best_loss = test_metrics['loss']
             best_model = copy.deepcopy(model)
     
+    print()
     make_log_print("Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})
+    print()
 
     # Save the model
     best_model.save(WEIGHTS_PATH_POLARITY)
