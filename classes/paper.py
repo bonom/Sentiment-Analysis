@@ -222,7 +222,7 @@ def paper_train_polarity_classification(epochs: int = 100, lr: float = 0.01, wei
     criterion = torch.nn.BCEWithLogitsLoss().to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     # Scheduler (most efficient one)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=5, verbose=True)
+    # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=5, verbose=True)
 
     # Create variables to store the best model
     best_acc = 0
@@ -260,7 +260,7 @@ def paper_train_polarity_classification(epochs: int = 100, lr: float = 0.01, wei
             best_model = copy.deepcopy(model)
         
         # Update the scheduler
-        scheduler.step()
+        # scheduler.step()
 
     print()
     make_log_print("Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})
