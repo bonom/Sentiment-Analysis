@@ -1,6 +1,7 @@
 import os
 import copy
 import time
+from sklearn.model_selection import train_test_split
 import torch
 import numpy as np
 import torch.nn as nn
@@ -114,7 +115,15 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
 
     # Compute lebels and split in train/test set
     labels = [1] * len(subj) + [0] * len(obj)
-    train_set_x, train_set_y, test_set_x, test_set_y = create_dataset(subj + obj, labels)
+
+    # Split in train/test set
+    data = []
+    for sentence, label in zip(subj + obj, labels):
+        data.append((sentence, label))
+    train_set, test_set = train_test_split(data, test_size=0.2, random_state=0)
+
+    train_set_x, train_set_y = zip(*train_set)
+    test_set_x, test_set_y = zip(*test_set)
 
     # Make train/test set
     # Since the classifier is not able to handle strings, we need to convert them to a list of integers
@@ -199,7 +208,15 @@ def train_polarity_classification(epochs: int = 20, lr: float = 0.001, weight_de
 
     # Compute lebels and split in train/test set
     labels = [1] * len(pos) + [0] * len(neg)
-    train_set_x, train_set_y, test_set_x, test_set_y = create_dataset(pos + neg, labels)
+
+    # Split in train/test set
+    data = []
+    for sentence, label in zip(pos + neg, labels):
+        data.append((sentence, label))
+    train_set, test_set = train_test_split(data, test_size=0.2, random_state=0)
+
+    train_set_x, train_set_y = zip(*train_set)
+    test_set_x, test_set_y = zip(*test_set)
 
     # Make train/test set
     # Since the classifier is not able to handle strings, we need to convert them to a list of integers
