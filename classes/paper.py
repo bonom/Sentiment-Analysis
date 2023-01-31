@@ -81,7 +81,7 @@ def paper_make_dirs():
     if not os.path.exists(PLOTS_PATH_PAPER):
         os.makedirs(PLOTS_PATH_PAPER)
 
-def paper_train_subjectivity_classification(epochs:int = 100, lr:float = 0.01, weight_decay:float = 1e-6, device:str = 'cpu') -> nn.Module:
+def paper_train_subjectivity_classification(epochs:int = 30, lr:float = 0.01, weight_decay:float = 1e-6, device:str = 'cpu') -> nn.Module:
     """
     Do subjectivity classification using a custom classifier.
     """    
