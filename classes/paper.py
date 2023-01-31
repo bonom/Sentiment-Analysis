@@ -81,7 +81,7 @@ def paper_make_dirs():
     if not os.path.exists(PLOTS_PATH_PAPER):
         os.makedirs(PLOTS_PATH_PAPER)
 
-def paper_train_subjectivity_classification(epochs:int = 100, lr:float = 0.001, weight_decay:float = 0.0001, device:str = 'cpu') -> nn.Module:
+def paper_train_subjectivity_classification(epochs:int = 100, lr:float = 0.01, weight_decay:float = 1e-6, device:str = 'cpu') -> nn.Module:
     """
     Do subjectivity classification using a custom classifier.
     """    
@@ -175,7 +175,7 @@ def paper_train_subjectivity_classification(epochs:int = 100, lr:float = 0.001, 
     
     return best_model
 
-def paper_train_polarity_classification(epochs: int = 100, lr: float = 0.001, weight_decay: float = 1e-10, device: str = 'cpu') -> nn.Module:
+def paper_train_polarity_classification(epochs: int = 100, lr: float = 0.01, weight_decay: float = 1e-8, device: str = 'cpu') -> nn.Module:
     """
     Do polarity classification using a trained classifier.
     """
@@ -221,8 +221,8 @@ def paper_train_polarity_classification(epochs: int = 100, lr: float = 0.001, we
     model = BiLSTM_CNN_Attention(vocab_size=len(word2index), emb_dim=128, lstm_hidden_dim=128, cnn_num_filters=3, cnn_filter_sizes=(2,4,6), num_classes=1).to(device)
     criterion = torch.nn.BCEWithLogitsLoss().to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
-    # Lambda scheduler
-    scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda epoch: 0.99 ** epoch)
+    # Scheduler (most efficient one)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=5, verbose=True)
 
     # Create variables to store the best model
     best_acc = 0
