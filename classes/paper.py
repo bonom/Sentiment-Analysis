@@ -175,7 +175,7 @@ def paper_train_subjectivity_classification(epochs:int = 30, lr:float = 0.01, we
     
     return best_model
 
-def paper_train_polarity_classification(epochs: int = 100, lr: float = 0.01, weight_decay: float = 1e-8, device: str = 'cpu') -> nn.Module:
+def paper_train_polarity_classification(epochs: int = 100, lr: float = 0.01, weight_decay: float = 1e-6, device: str = 'cpu') -> nn.Module:
     """
     Do polarity classification using a trained classifier.
     """
@@ -221,8 +221,7 @@ def paper_train_polarity_classification(epochs: int = 100, lr: float = 0.01, wei
     model = BiLSTM_CNN_Attention(vocab_size=len(word2index), emb_dim=128, lstm_hidden_dim=128, cnn_num_filters=3, cnn_filter_sizes=(2,4,6), num_classes=1).to(device)
     criterion = torch.nn.BCEWithLogitsLoss().to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
-    # Scheduler (most efficient one)
-    # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=5, verbose=True)
+    # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
 
     # Create variables to store the best model
     best_acc = 0
