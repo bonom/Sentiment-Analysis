@@ -13,11 +13,11 @@ if __name__ == '__main__':
 
     ### Baseline classifiers
     print(f"--- Running baseline classifiers ---")
-    run_baseline()
+    # run_baseline()
     
     ### Custom classifiers
     print(f"--- Running paper classifiers ---")
-    run_paper(device=device)    
+    # run_paper(device=device)    
 
     ### Custom classifiers
     print(f"--- Running custom classifiers ---")    
