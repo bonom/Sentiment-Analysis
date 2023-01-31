@@ -48,9 +48,9 @@ class LSTM(nn.Module):
         self.embedding = nn.Embedding(input_size, emb_size, padding_idx=padding_idx)
 
         # Then we need our memory layer, which is a LSTM in this case
-        # self.memory = nn.LSTM(input_size=emb_size, hidden_size=hidden_size, num_layers=n_layers, bidirectional=True, batch_first=True)
+        self.memory = nn.LSTM(input_size=emb_size, hidden_size=hidden_size, num_layers=n_layers, bidirectional=True, batch_first=True)
         # Can also be used with GRU, to test it out, just uncomment the line below and comment the line above
-        self.memory = nn.GRU(input_size=emb_size, hidden_size=hidden_size, num_layers=n_layers, bidirectional=True, batch_first=True)
+        # self.memory = nn.GRU(input_size=emb_size, hidden_size=hidden_size, num_layers=n_layers, bidirectional=True, batch_first=True)
 
         # Then we need a dropout layer to prevent overfitting
         self.dropout = nn.Dropout(dropout_pr)
@@ -146,6 +146,8 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
     model = LSTM(input_size=len(word2index), emb_size=128, hidden_size=128, output_size=1).to(device)
     criterion = torch.nn.BCEWithLogitsLoss().to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+    # Scheduler (lambda scheduler)
+    scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda epoch: 0.95 ** epoch)
 
     # Create variables to store the best model
     best_acc = 0
@@ -182,6 +184,9 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
             best_loss = test_metrics['loss']
             best_model = copy.deepcopy(model)
 
+        # Update scheduler
+        scheduler.step()
+
     print()
     make_log_print("Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})
     print()
@@ -194,7 +199,7 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
     
     return best_model
 
-def train_polarity_classification(epochs: int = 20, lr: float = 0.001, weight_decay: float = 0.0, device: str = 'cpu'):
+def train_polarity_classification(epochs: int = 20, lr: float = 0.001, weight_decay: float = 1e-10, device: str = 'cpu'):
     """
     Do polarity classification using a trained classifier.
     """
@@ -239,6 +244,8 @@ def train_polarity_classification(epochs: int = 20, lr: float = 0.001, weight_de
     model = LSTM(input_size=len(word2index), emb_size=128, hidden_size=128, output_size=1).to(device)
     criterion = torch.nn.BCEWithLogitsLoss().to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+    # Scheduler (lambda scheduler)
+    scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda epoch: 0.95 ** epoch)
 
     # Create variables to store the best model
     best_acc = 0
@@ -274,6 +281,9 @@ def train_polarity_classification(epochs: int = 20, lr: float = 0.001, weight_de
             best_f1 = test_metrics['f1']
             best_loss = test_metrics['loss']
             best_model = copy.deepcopy(model)
+        
+        # Update scheduler
+        scheduler.step()
     
     print()
     make_log_print("Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})

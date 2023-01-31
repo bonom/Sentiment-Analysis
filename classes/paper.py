@@ -121,6 +121,7 @@ def paper_train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, w
     model = BiLSTM_CNN_Attention(vocab_size=len(word2index), emb_dim=128, lstm_hidden_dim=128, cnn_num_filters=3, cnn_filter_sizes=(2,4,6), num_classes=1).to(device)
     criterion = torch.nn.BCEWithLogitsLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+    scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda epoch: 0.95 ** epoch)
 
     # Create variables to store the best model
     best_acc = 0
@@ -157,6 +158,9 @@ def paper_train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, w
             best_loss = test_metrics['loss']
             best_model = copy.deepcopy(model)
 
+        # Update the scheduler
+        scheduler.step()
+
     print()
     make_log_print("Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})
     print()
@@ -169,7 +173,7 @@ def paper_train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, w
     
     return best_model
 
-def paper_train_polarity_classification(epochs: int = 20, lr: float = 0.001, weight_decay: float = 0.0, device: str = 'cpu') -> nn.Module:
+def paper_train_polarity_classification(epochs: int = 20, lr: float = 0.001, weight_decay: float = 1e-10, device: str = 'cpu') -> nn.Module:
     """
     Do polarity classification using a trained classifier.
     """
@@ -183,7 +187,7 @@ def paper_train_polarity_classification(epochs: int = 20, lr: float = 0.001, wei
 
     # Compute lebels and split in train/test set
     labels = [1] * len(pos) + [0] * len(neg)
-    
+
     data = []
     for sentence, label in zip(pos + neg, labels):
         data.append((sentence, label))
@@ -215,6 +219,8 @@ def paper_train_polarity_classification(epochs: int = 20, lr: float = 0.001, wei
     model = BiLSTM_CNN_Attention(vocab_size=len(word2index), emb_dim=128, lstm_hidden_dim=128, cnn_num_filters=3, cnn_filter_sizes=(2,4,6), num_classes=1).to(device)
     criterion = torch.nn.BCEWithLogitsLoss().to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+    # Lambda scheduler
+    scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda epoch: 0.95 ** epoch)
 
     # Create variables to store the best model
     best_acc = 0
@@ -250,7 +256,10 @@ def paper_train_polarity_classification(epochs: int = 20, lr: float = 0.001, wei
             best_f1 = test_metrics['f1']
             best_loss = test_metrics['loss']
             best_model = copy.deepcopy(model)
-    
+        
+        # Update the scheduler
+        scheduler.step()
+
     print()
     make_log_print("Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})
     print()
