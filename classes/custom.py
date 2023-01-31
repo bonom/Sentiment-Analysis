@@ -105,7 +105,7 @@ def make_dirs():
     if not os.path.exists(PLOTS_PATH_CUSTOM):
         os.makedirs(PLOTS_PATH_CUSTOM)
     
-def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_decay:float = 0.0001, device:str = 'cpu') -> nn.Module:
+def train_subjectivity_classification(epochs:int = 100, lr:float = 0.001, weight_decay:float = 0.0001, device:str = 'cpu') -> nn.Module:
     """
     Do subjectivity classification using a custom classifier.
     """    
@@ -147,7 +147,7 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
     criterion = torch.nn.BCEWithLogitsLoss().to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     # Scheduler (lambda scheduler)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.1)
     # scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda epoch: 0.95 ** epoch)
 
     # Create variables to store the best model
@@ -200,7 +200,7 @@ def train_subjectivity_classification(epochs:int = 20, lr:float = 0.001, weight_
     
     return best_model
 
-def train_polarity_classification(epochs: int = 20, lr: float = 0.001, weight_decay: float = 1e-10, device: str = 'cpu'):
+def train_polarity_classification(epochs: int = 100, lr: float = 0.001, weight_decay: float = 1e-10, device: str = 'cpu'):
     """
     Do polarity classification using a trained classifier.
     """
@@ -238,15 +238,15 @@ def train_polarity_classification(epochs: int = 20, lr: float = 0.001, weight_de
     test_set = CustomDataset(test_set_x, test_set_y)
     
     # Make DataLoader - I had to reduce the batch size to 16 because of memory issues
-    train_loader = DataLoader(train_set, batch_size=16, shuffle=True, collate_fn=collate_fn)
-    test_loader = DataLoader(test_set, batch_size=16, shuffle=True, collate_fn=collate_fn)
+    train_loader = DataLoader(train_set, batch_size=128, shuffle=True, collate_fn=collate_fn)
+    test_loader = DataLoader(test_set, batch_size=128, shuffle=True, collate_fn=collate_fn)
     
     # Create a custom classifier
     model = LSTM(input_size=len(word2index), emb_size=128, hidden_size=128, output_size=1).to(device)
     criterion = torch.nn.BCEWithLogitsLoss().to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     # Scheduler (lambda scheduler)
-    scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda epoch: 0.95 ** epoch)
+    scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda epoch: 0.99 ** epoch)
 
     # Create variables to store the best model
     best_acc = 0
@@ -300,7 +300,7 @@ def train_polarity_classification(epochs: int = 20, lr: float = 0.001, weight_de
 
 def run_custom(device: str = 'cpu'):
     # Train subjectivity classifier with custom implementation
-    subj_class = train_subjectivity_classification(epochs=40, device=device)
+    subj_class = train_subjectivity_classification(device=device)
 
     # Train polarity classifier with custom implementation
     pol_class = train_polarity_classification(device=device)
