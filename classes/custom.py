@@ -54,7 +54,7 @@ class LSTM(nn.Module):
         self.dropout = nn.Dropout(dropout_pr)
 
         # Then we need our attention layer
-        self.attention = Attention(hidden_size * 2, dropout_pr)
+        self.attention = Attention(hidden_size * 2)
 
         # Then we need a classifier layer to convert our LSTM output to our desired output size
         self.out = nn.Linear(hidden_size * 2, output_size)
