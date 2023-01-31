@@ -105,7 +105,7 @@ def make_dirs():
     if not os.path.exists(PLOTS_PATH_CUSTOM):
         os.makedirs(PLOTS_PATH_CUSTOM)
     
-def train_subjectivity_classification(epochs:int = 100, lr:float = 0.001, weight_decay:float = 0.0001, device:str = 'cpu') -> nn.Module:
+def train_subjectivity_classification(epochs:int = 30, lr:float = 1e-2, weight_decay:float = 0.0001, device:str = 'cpu') -> nn.Module:
     """
     Do subjectivity classification using a custom classifier.
     """    
@@ -145,9 +145,8 @@ def train_subjectivity_classification(epochs:int = 100, lr:float = 0.001, weight
     # Create a custom classifier
     model = LSTM(input_size=len(word2index), emb_size=128, hidden_size=128, output_size=1).to(device)
     criterion = torch.nn.BCEWithLogitsLoss().to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     # Scheduler (lambda scheduler)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
     # scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda epoch: 0.95 ** epoch)
 
     # Create variables to store the best model
@@ -186,7 +185,7 @@ def train_subjectivity_classification(epochs:int = 100, lr:float = 0.001, weight
             best_model = copy.deepcopy(model)
 
         # Update scheduler
-        scheduler.step()
+        # scheduler.step()
 
     print()
     make_log_print("Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})
