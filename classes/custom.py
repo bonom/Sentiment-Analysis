@@ -197,7 +197,7 @@ def train_subjectivity_classification(epochs:int = 30, lr:float = 1e-2,device:st
     
     return best_model
 
-def train_polarity_classification(epochs: int = 100, lr: float = 0.001, weight_decay: float = 1e-10, device: str = 'cpu'):
+def train_polarity_classification(epochs: int = 100, lr: float = 1e-3, device: str = 'cpu'):
     """
     Do polarity classification using a trained classifier.
     """
@@ -241,9 +241,9 @@ def train_polarity_classification(epochs: int = 100, lr: float = 0.001, weight_d
     # Create a custom classifier
     model = LSTM(input_size=len(word2index), emb_size=128, hidden_size=128, output_size=1).to(device)
     criterion = torch.nn.BCEWithLogitsLoss().to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     # Scheduler (lambda scheduler)
-    scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda epoch: 0.99 ** epoch)
+    # scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda epoch: 0.99 ** epoch)
 
     # Create variables to store the best model
     best_acc = 0
@@ -281,7 +281,7 @@ def train_polarity_classification(epochs: int = 100, lr: float = 0.001, weight_d
             best_model = copy.deepcopy(model)
         
         # Update scheduler
-        scheduler.step()
+        # scheduler.step()
     
     print()
     make_log_print("Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})
