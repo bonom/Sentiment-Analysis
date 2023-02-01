@@ -45,16 +45,14 @@ def get_basic_logger(name, level=logging.INFO, log_path:str=None) -> logging.Log
     logger.setLevel(level)
     formatter = CustomFormatter()
     ch = logging.StreamHandler()
+    formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(name)s | %(filename)s:%(lineno)d | %(message)s')
+    fh = logging.FileHandler(log_path)
     ch.setLevel(level)
     ch.setFormatter(formatter)
+    fh.setLevel(level)
+    fh.setFormatter(formatter)
     logger.addHandler(ch)
-
-    if log_path:
-        formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(name)s | %(filename)s:%(lineno)d | %(message)s')
-        fh = logging.FileHandler(log_path)
-        fh.setLevel(level)
-        fh.setFormatter(formatter)
-        logger.addHandler(fh)
+    logger.addHandler(fh)
 
     return logger
 
@@ -83,7 +81,7 @@ def check_downloads() -> None:
         nltk.data.find('corpora/subjectivity')
     except LookupError:
         nltk.download('subjectivity')
-        
+
     return 
 
 #################################################

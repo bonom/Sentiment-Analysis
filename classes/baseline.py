@@ -103,7 +103,7 @@ def train_polarity_classifier(subj_classifier, subj_vectorizer):
 
 
 def run_baseline():
-    logger_baseline = get_basic_logger("Baseline")
+    logger_baseline = get_basic_logger("Baseline", log_path="Log.txt")
 
     scores, classifier, vectorizer = train_subjectivity_classifier()
     logger_baseline.info(f"Subjectivity classifier scores: {np.mean(scores):.2f} +- {np.std(scores):.2f}")
