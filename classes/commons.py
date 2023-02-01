@@ -47,15 +47,15 @@ def get_basic_logger(name, level=logging.INFO, log_path:str=None) -> logging.Log
     if logger.handlers:
         logger.handlers = []
 
-    formatter = CustomFormatter()
-    ch = logging.StreamHandler()
+    # formatter = CustomFormatter()
+    # ch = logging.StreamHandler()
     formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(name)s | %(filename)s:%(lineno)d | %(message)s')
     fh = logging.FileHandler(log_path)
-    ch.setLevel(level)
-    ch.setFormatter(formatter)
+    # ch.setLevel(level)
+    # ch.setFormatter(formatter)
     fh.setLevel(level)
     fh.setFormatter(formatter)
-    logger.addHandler(ch)
+    # logger.addHandler(ch)
     logger.addHandler(fh)
 
     return logger
