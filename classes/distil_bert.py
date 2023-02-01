@@ -243,7 +243,7 @@ def train_subjectivity_classification(epochs:int = 5, lr:float = 2e-5, device:st
     make_log_print(logger_transformer, "Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})
 
     # Save the model
-    best_model.save(WEIGHTS_PATH_SUBJECTIVITY)
+    torch.save(best_model.state_dict(), WEIGHTS_PATH_SUBJECTIVITY)
 
     # Plot loss, accuracy and f1 score
     plot_data(data, title="Subjectivity train results", save_path=PLOTS_PATH_SUBJECTIVITY)
@@ -336,7 +336,7 @@ def train_polarity_classification(epochs: int = 30, lr: float = 2e-5, device: st
     make_log_print(logger_transformer, "Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})
     
     # Save the model
-    best_model.save(WEIGHTS_PATH_POLARITY)
+    torch.save(best_model.state_dict(), WEIGHTS_PATH_POLARITY)
 
     # Plot loss, accuracy and f1 score
     plot_data(data, title="Polarity train results", save_path=PLOTS_PATH_POLARITY)
