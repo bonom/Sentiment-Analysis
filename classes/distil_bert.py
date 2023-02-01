@@ -250,7 +250,7 @@ def train_subjectivity_classification(epochs:int = 5, lr:float = 2e-5, device:st
     
     return best_model
 
-def train_polarity_classification(epochs: int = 30, lr: float = 2e-5, device: str = 'cpu'):
+def train_polarity_classification(epochs: int = 5, lr: float = 2e-5, device: str = 'cpu'):
     """
     Do polarity classification using a trained classifier.
     """
