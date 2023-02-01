@@ -17,15 +17,15 @@ if __name__ == '__main__':
 
     ### Baseline classifiers
     logger_main.info("--- Running baseline classifiers ---")
-    # run_baseline()
+    run_baseline()
     
     ### Paper classifiers
     logger_main.info("--- Running BiLSTM with CNN classifiers ---")
-    # run_bilstm_cnn(device=device)    
+    run_bilstm_cnn(device=device)    
 
     ### Custom classifiers
     logger_main.info("--- Running BiLSTM classifiers ---") 
-    # run_bilstm(device=device)
+    run_bilstm(device=device)
 
     ### Transformers classifiers
     logger_main.info("--- Running DistilBERT classifiers ---")
