@@ -3,8 +3,10 @@ import torch
 from classes.commons import check_downloads
 from classes.baseline import run_baseline
 
-from classes.custom import run_custom 
-from classes.paper import run_paper
+from classes.bilstm import run_custom 
+from classes.bilstm_cnn import run_paper
+
+from classes.transformers import run_transformer
 
 if __name__ == '__main__':
     check_downloads()
@@ -21,7 +23,11 @@ if __name__ == '__main__':
 
     ### Custom classifiers
     print(f"--- Running custom classifiers ---")    
-    run_custom(device=device)
+    # run_custom(device=device)
+
+    ### Transformers
+    print(f"--- Running transformers ---")
+    run_transformer(device=device)
     
     
 

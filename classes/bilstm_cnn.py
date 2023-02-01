@@ -12,11 +12,11 @@ from classes.dataset import CustomDataset
 from nltk.corpus import movie_reviews, subjectivity
 from classes.commons import create_dataset, create_word_2_index, collate_fn, make_log_print, plot_data, test_single_epoch, train_single_epoch
 
-WEIGHTS_PATH_PAPER = os.path.join('weights', 'paper_implementation')
+WEIGHTS_PATH_PAPER = os.path.join('weights', 'bilstm_cnn')
 WEIGHTS_PATH_SUBJECTIVITY = os.path.join(WEIGHTS_PATH_PAPER, 'subjectivity_classification.pt')
 WEIGHTS_PATH_POLARITY = os.path.join(WEIGHTS_PATH_PAPER, 'polarity_classification.pt')
 
-PLOTS_PATH_PAPER = os.path.join('plots', 'paper_implementation')
+PLOTS_PATH_PAPER = os.path.join('plots', 'bilstm_cnn')
 PLOTS_PATH_SUBJECTIVITY = os.path.join(PLOTS_PATH_PAPER, 'subjectivity_train_loss_accuracy_f1.png')
 PLOTS_PATH_POLARITY = os.path.join(PLOTS_PATH_PAPER, 'polarity_train_loss_accuracy_f1.png')
 
@@ -92,10 +92,8 @@ def paper_train_subjectivity_classification(epochs:int = 30, lr:float = 1e-2, de
     # Compute lebels and split in train/test set
     labels = [1] * len(subj) + [0] * len(obj)
     
-    data = []
-    for sentence, label in zip(subj + obj, labels):
-        data.append((sentence, label))
-    train_set, test_set = train_test_split(data, test_size=0.2, random_state=0)
+    dataset = CustomDataset(subj + obj, labels)
+    train_set, test_set = train_test_split(dataset, test_size=0.2, random_state=0)
 
     train_set_x, train_set_y = zip(*train_set)
     test_set_x, test_set_y = zip(*test_set)
@@ -187,10 +185,8 @@ def paper_train_polarity_classification(epochs: int = 30, lr: float = 1e-3, devi
     # Compute lebels and split in train/test set
     labels = [1] * len(pos) + [0] * len(neg)
 
-    data = []
-    for sentence, label in zip(pos + neg, labels):
-        data.append((sentence, label))
-    train_set, test_set = train_test_split(data, test_size=0.2, random_state=0)
+    dataset = CustomDataset(pos + neg, labels)
+    train_set, test_set = train_test_split(dataset, test_size=0.2, random_state=0)
 
     train_set_x, train_set_y = zip(*train_set)
     test_set_x, test_set_y = zip(*test_set)
