@@ -1,7 +1,6 @@
 import os
 import copy
 import time
-from sklearn.model_selection import train_test_split
 import torch
 import numpy as np
 import torch.nn as nn
@@ -10,9 +9,10 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from classes.dataset import CustomDataset
 from nltk.corpus import movie_reviews, subjectivity
+from sklearn.metrics import accuracy_score, f1_score
+from sklearn.model_selection import train_test_split
 from transformers import DistilBertForSequenceClassification
-from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
-from classes.commons import create_word_2_index, collate_fn, make_log_print, plot_data, test_single_epoch, train_single_epoch
+from classes.commons import create_word_2_index, collate_fn, make_log_print, plot_data
 
 WEIGHTS_PATH_TRANSFORMER = os.path.join('weights', 'transformer')
 WEIGHTS_PATH_SUBJECTIVITY = os.path.join(WEIGHTS_PATH_TRANSFORMER, 'subjectivity_classification.pt')
@@ -27,6 +27,90 @@ def make_dirs():
         os.makedirs(WEIGHTS_PATH_TRANSFORMER)
     if not os.path.exists(PLOTS_PATH_TRANSFORMER):
         os.makedirs(PLOTS_PATH_TRANSFORMER)
+
+### Since model input is different from the others, we need to re-define the train and test functions
+
+def train_single_epoch(model:nn.Module, train_loader: DataLoader, optimizer:torch.optim.Optimizer, criterion, device):
+    model.train()
+    train_loss = 0
+    train_acc = 0
+    train_f1 = 0
+    for sentences, labels, _ in train_loader:
+        # Move to device - No need to move lengths to device since it is needed only on cpu
+        sentences, labels = sentences.to(device), labels.to(device)
+
+        # Forward pass
+        predictions = model(sentences)
+
+        # Calculate loss
+        loss = criterion(predictions, labels)
+
+        # Zero the gradients
+        optimizer.zero_grad()
+        # Backward pass and update weights
+        loss.backward()
+        optimizer.step()
+
+        # Detach the predictions from the graph
+        # torch.nn.functional.sigmoid(predictions) is deprecated
+        pred = torch.sigmoid(predictions).round()
+        pred = pred.cpu().detach().numpy()
+        labels = labels.cpu().detach().numpy()
+
+        # Calculate accuracy and f1 score
+        acc = accuracy_score(pred, labels)
+        f1 = f1_score(pred, labels, zero_division=0)
+
+        # Update train loss, accuracy and f1 score
+        train_loss += loss.item()
+        train_acc += acc.item()
+        train_f1 += f1.item()
+    
+    return {
+        "loss": train_loss/len(train_loader),
+        "accuracy": train_acc/len(train_loader),
+        "f1": train_f1/len(train_loader)
+    }
+
+def test_single_epoch(model:nn.Module, test_loader: DataLoader, criterion, device):
+    model.eval()
+    test_loss = 0
+    test_acc = 0
+    test_f1 = 0
+    
+    with torch.no_grad():
+        for sentences, labels, _ in test_loader:
+            # Move to device - No need to move lengths to device since it is needed only on cpu
+            sentences, labels = sentences.to(device), labels.to(device)
+
+            # Forward pass
+            predictions = model(sentences)
+
+            # Calculate loss
+            loss = criterion(predictions, labels)
+
+            # Detach the predictions from the graph
+            # torch.nn.functional.sigmoid(predictions) is deprecated
+            pred = torch.sigmoid(predictions).round()
+            pred = pred.cpu().detach().numpy()
+            labels = labels.cpu().detach().numpy()
+
+            # Calculate accuracy and f1 score
+            acc = accuracy_score(pred, labels)
+            f1 = f1_score(pred, labels)
+
+            # Update val loss, accuracy and f1 score
+            test_loss += loss.item()
+            test_acc += acc.item()
+            test_f1 += f1.item()
+
+    return {
+        "loss": test_loss/len(test_loader),
+        "accuracy": test_acc/len(test_loader),
+        "f1": test_f1/len(test_loader)
+    }
+
+
     
 def train_subjectivity_classification(epochs:int = 30, lr:float = 2e-5, device:str = 'cpu') -> nn.Module:
     """
