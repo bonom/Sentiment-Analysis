@@ -2,9 +2,9 @@
 import torch
 
 from classes.baseline import run_baseline
-from classes.bilstm import run_custom 
-from classes.bilstm_cnn import run_paper
-from classes.distil_bert import run_transformer
+from classes.bilstm_cnn import run_bilstm_cnn
+from classes.bilstm import run_bilstm
+from classes.distil_bert import run_distil_bert
 
 from classes.commons import check_downloads, get_basic_logger
 
@@ -21,15 +21,15 @@ if __name__ == '__main__':
     
     ### Paper classifiers
     logger_main.info("--- Running BiLSTM with CNN classifiers ---")
-    run_paper(device=device)    
+    run_bilstm_cnn(device=device)    
 
     ### Custom classifiers
     logger_main.info("--- Running BiLSTM classifiers ---") 
-    run_custom(device=device)
+    run_bilstm(device=device)
 
     ### Transformers classifiers
     logger_main.info("--- Running DistilBERT classifiers ---")
-    run_transformer(device=device)
+    run_distil_bert(device=device)
     
     
 

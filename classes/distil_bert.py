@@ -343,7 +343,7 @@ def train_polarity_classification(epochs: int = 30, lr: float = 2e-5, device: st
 
     return best_model
 
-def run_transformer(device: str = 'cpu'):
+def run_distil_bert(device: str = 'cpu'):
     make_dirs()
     
     # Train subjectivity classifier with custom implementation

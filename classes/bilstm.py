@@ -288,7 +288,7 @@ def train_polarity_classification(epochs: int = 30, lr: float = 1e-3, device: st
 
     return best_model
 
-def run_BILSTM(device: str = 'cpu'):
+def run_bilstm(device: str = 'cpu'):
     make_dirs()
     
     # Train subjectivity classifier with custom implementation
