@@ -6,7 +6,7 @@ from classes.baseline import run_baseline
 from classes.bilstm import run_custom 
 from classes.bilstm_cnn import run_paper
 
-from classes.transformers import run_transformer
+from classes.transformer import run_transformer
 
 if __name__ == '__main__':
     check_downloads()
