@@ -144,8 +144,8 @@ def train_subjectivity_classification(epochs:int = 30, lr:float = 2e-5, device:s
     test_set = CustomDataset(test_set_x, test_set_y)
     
     # Make DataLoader
-    train_loader = DataLoader(train_set, batch_size=1024, shuffle=True, collate_fn=collate_fn)
-    test_loader = DataLoader(test_set, batch_size=1024, shuffle=True, collate_fn=collate_fn)
+    train_loader = DataLoader(train_set, batch_size=256, shuffle=True, collate_fn=collate_fn)
+    test_loader = DataLoader(test_set, batch_size=256, shuffle=True, collate_fn=collate_fn)
     
     # Initialize DistilBERT model
     model = DistilBertForSequenceClassification.from_pretrained("distilbert-base-uncased")
