@@ -92,7 +92,7 @@ def paper_train_subjectivity_classification(epochs:int = 30, lr:float = 1e-2, de
     # Compute lebels and split in train/test set
     labels = [1] * len(subj) + [0] * len(obj)
     
-    dataset = CustomDataset(subj + obj, labels)
+    dataset = list(zip(subj + obj, labels))
     train_set, test_set = train_test_split(dataset, test_size=0.2, random_state=0)
 
     train_set_x, train_set_y = zip(*train_set)
@@ -185,7 +185,7 @@ def paper_train_polarity_classification(epochs: int = 30, lr: float = 1e-3, devi
     # Compute lebels and split in train/test set
     labels = [1] * len(pos) + [0] * len(neg)
 
-    dataset = CustomDataset(pos + neg, labels)
+    dataset = list(zip(pos + neg, labels))
     train_set, test_set = train_test_split(dataset, test_size=0.2, random_state=0)
 
     train_set_x, train_set_y = zip(*train_set)
