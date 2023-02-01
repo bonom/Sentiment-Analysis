@@ -5,16 +5,14 @@ import torch
 import numpy as np
 import torch.nn as nn
 
-# from classes.model import LSTM
 from torch.utils.data import DataLoader
-from classes.dataset import CustomDataset
-from torch.nn.utils.rnn import pad_sequence
 from nltk.corpus import movie_reviews, subjectivity
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import train_test_split
-from torch.nn.utils.rnn import pack_padded_sequence
-from transformers import DistilBertForSequenceClassification, DistilBertTokenizerFast, AdamW, get_linear_schedule_with_warmup
-from classes.commons import create_word_2_index, make_log_print, plot_data, list2str
+from transformers import DistilBertForSequenceClassification, DistilBertTokenizerFast
+
+from classes.dataset import CustomDataset
+from classes.commons import get_basic_logger, make_log_print, plot_data, list2str
 
 WEIGHTS_PATH_TRANSFORMER = os.path.join('weights', 'transformer')
 WEIGHTS_PATH_SUBJECTIVITY = os.path.join(WEIGHTS_PATH_TRANSFORMER, 'subjectivity_classification.pt')
@@ -23,6 +21,8 @@ WEIGHTS_PATH_POLARITY = os.path.join(WEIGHTS_PATH_TRANSFORMER, 'polarity_classif
 PLOTS_PATH_TRANSFORMER = os.path.join('plots', 'transformer')
 PLOTS_PATH_SUBJECTIVITY = os.path.join(PLOTS_PATH_TRANSFORMER, 'subjectivity_train_loss_accuracy_f1.png')
 PLOTS_PATH_POLARITY = os.path.join(PLOTS_PATH_TRANSFORMER, 'polarity_train_loss_accuracy_f1.png')
+
+logger_transformer = get_basic_logger('Transformer', log_path="Log.txt")
 
 def make_dirs():
     if not os.path.exists(WEIGHTS_PATH_TRANSFORMER):
@@ -228,7 +228,7 @@ def train_subjectivity_classification(epochs:int = 30, lr:float = 2e-5, device:s
             data['test'][key].append(test_metrics[key])
 
         # Print results
-        make_log_print("Train", (epoch+1, epochs), time.time() - start_time, train_metrics, test_metrics)
+        make_log_print(logger_transformer, "Train", (epoch+1, epochs), time.time() - start_time, train_metrics, test_metrics)
 
         # Save the best model
         if test_metrics['accuracy'] > best_acc:
@@ -240,9 +240,7 @@ def train_subjectivity_classification(epochs:int = 30, lr:float = 2e-5, device:s
         # Update scheduler
         # scheduler.step()
 
-    print()
-    make_log_print("Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})
-    print()
+    make_log_print(logger_transformer, "Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})
 
     # Save the model
     best_model.save(WEIGHTS_PATH_SUBJECTIVITY)
@@ -323,7 +321,7 @@ def train_polarity_classification(epochs: int = 30, lr: float = 2e-5, device: st
             data['test'][key].append(test_metrics[key])
 
         # Print results
-        make_log_print("Train", (epoch+1, epochs), time.time() - start_time, train_metrics, test_metrics)
+        make_log_print(logger_transformer, "Train", (epoch+1, epochs), time.time() - start_time, train_metrics, test_metrics)
 
         # Save the best model
         if test_metrics['accuracy'] > best_acc:
@@ -335,10 +333,8 @@ def train_polarity_classification(epochs: int = 30, lr: float = 2e-5, device: st
         # Update scheduler
         # scheduler.step()
     
-    print()
-    make_log_print("Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})
-    print()
-
+    make_log_print(logger_transformer, "Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})
+    
     # Save the model
     best_model.save(WEIGHTS_PATH_POLARITY)
 

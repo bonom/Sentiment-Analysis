@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from classes.dataset import CustomDataset
 from nltk.corpus import movie_reviews, subjectivity
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
-from classes.commons import create_dataset, create_word_2_index, collate_fn, make_log_print, plot_data, test_single_epoch, train_single_epoch
+from classes.commons import create_dataset, create_word_2_index, collate_fn, make_log_print, plot_data, test_single_epoch, train_single_epoch, get_basic_logger
 
 WEIGHTS_PATH_CUSTOM = os.path.join('weights', 'bilstm')
 WEIGHTS_PATH_SUBJECTIVITY = os.path.join(WEIGHTS_PATH_CUSTOM, 'subjectivity_classification.pt')
@@ -21,6 +21,7 @@ PLOTS_PATH_CUSTOM = os.path.join('plots', 'bilstm')
 PLOTS_PATH_SUBJECTIVITY = os.path.join(PLOTS_PATH_CUSTOM, 'subjectivity_train_loss_accuracy_f1.png')
 PLOTS_PATH_POLARITY = os.path.join(PLOTS_PATH_CUSTOM, 'polarity_train_loss_accuracy_f1.png')
 
+logger_bilstm = get_basic_logger('BiLSTM')
 
 class Attention(nn.Module):
     def __init__(self, hidden_size:int):
@@ -86,15 +87,15 @@ class BiLSTM(nn.Module):
         return x
     
     def save(self, path:str) -> None:
-        print(f"Saving model to '{os.path.abspath(path)}'")
+        logger_bilstm.info(f"Saving model to '{os.path.abspath(path)}'")
         torch.save(self.state_dict(), path)
     
     def load(self, path:str) -> None:
-        print(f"Loading model from '{os.path.abspath(path)}'")
+        logger_bilstm.info(f"Loading model from '{os.path.abspath(path)}'")
         try:
             self.load_state_dict(torch.load(path))
         except RuntimeError:
-            print("[WARNING] Model architecture does not match, loading only weights")
+            logger_bilstm.warning("Model architecture does not match, loading only weights")
             self.load_state_dict(torch.load(path, map_location=torch.device('cpu')))
 
 def make_dirs():
@@ -171,7 +172,7 @@ def train_subjectivity_classification(epochs:int = 30, lr:float = 1e-2,device:st
             data['test'][key].append(test_metrics[key])
 
         # Print results
-        make_log_print("Train", (epoch+1, epochs), time.time() - start_time, train_metrics, test_metrics)
+        make_log_print(logger_bilstm, "Train", (epoch+1, epochs), time.time() - start_time, train_metrics, test_metrics)
 
         # Save the best model
         if test_metrics['accuracy'] > best_acc:
@@ -183,9 +184,7 @@ def train_subjectivity_classification(epochs:int = 30, lr:float = 1e-2,device:st
         # Update scheduler
         # scheduler.step()
 
-    print()
-    make_log_print("Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})
-    print()
+    make_log_print(logger_bilstm, "Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})
 
     # Save the model
     best_model.save(WEIGHTS_PATH_SUBJECTIVITY)
@@ -267,7 +266,7 @@ def train_polarity_classification(epochs: int = 30, lr: float = 1e-3, device: st
             data['test'][key].append(test_metrics[key])
 
         # Print results
-        make_log_print("Train", (epoch+1, epochs), time.time() - start_time, train_metrics, test_metrics)
+        make_log_print(logger_bilstm, "Train", (epoch+1, epochs), time.time() - start_time, train_metrics, test_metrics)
 
         # Save the best model
         if test_metrics['accuracy'] > best_acc:
@@ -279,9 +278,7 @@ def train_polarity_classification(epochs: int = 30, lr: float = 1e-3, device: st
         # Update scheduler
         # scheduler.step()
     
-    print()
-    make_log_print("Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})
-    print()
+    make_log_print(logger_bilstm, "Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})
 
     # Save the model
     best_model.save(WEIGHTS_PATH_POLARITY)

@@ -1,16 +1,66 @@
 import os
 import nltk
 import torch
+import logging
 import torch.nn as nn
 import matplotlib.pyplot as plt
 
 from typing import List
-from nltk.corpus import stopwords
+from logging import Logger
 from torch.utils.data import DataLoader
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.feature_extraction.text import CountVectorizer
+
+#################################################
+# Logger function
+#################################################
+
+
+class CustomFormatter(logging.Formatter):
+    grey = "\x1b[38;20m"
+    yellow = "\x1b[33;20m"
+    red = "\x1b[31;20m"
+    bold = "\x1b[1m"
+    bold_red = "\x1b[31;1m"
+    reset = "\x1b[0m"
+    format = '%(asctime)s | %(levelname)s | %(name)s --> %(message)s'
+    debug_format = '%(asctime)s | %(levelname)s | %(filename)s:%(lineno)d --> %(message)s'#'%(asctime)s | %(name)s | %(filename)s:%(lineno)d  | %(message)s'
+
+    FORMATS = {
+        logging.DEBUG: bold + debug_format + reset,
+        logging.INFO: grey + format + reset,
+        logging.WARNING: yellow + debug_format + reset,
+        logging.ERROR: red + debug_format + reset,
+        logging.CRITICAL: bold_red + debug_format + reset
+    }
+
+    def format(self, record):
+        log_fmt = self.FORMATS.get(record.levelno)
+        formatter = logging.Formatter(log_fmt, datefmt='%Y/%m/%d %H:%M:%S')
+        return formatter.format(record)
+
+def get_basic_logger(name, level=logging.INFO, log_path:str=None) -> logging.Logger:
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    formatter = CustomFormatter()
+    ch = logging.StreamHandler()
+    ch.setLevel(level)
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+
+    if log_path:
+        par_dir = os.path.dirname(log_path)
+        if not os.path.exists(par_dir):
+            os.makedirs(par_dir)
+
+        formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(name)s | %(filename)s:%(lineno)d | %(message)s')
+        fh = logging.FileHandler(log_path)
+        fh.setLevel(level)
+        fh.setFormatter(formatter)
+        logger.addHandler(fh)
+
+    return logger
 
 #################################################
 # Check if nltk data is downloaded
@@ -38,7 +88,7 @@ def check_downloads() -> None:
     except LookupError:
         nltk.download('subjectivity')
 
-    print("[OK] All required nltk data downloaded")
+    print("[OK] All required nltk data downloaded", file=open("Log.txt", "a"))
 
     return 
 
@@ -89,7 +139,7 @@ def collate_fn(batch):
 # Print logs
 #################################################
 
-def make_log_print(status:str = "Train", epoch:tuple = None, timer:float = None, train_metrics:dict = None, test_metrics:dict = None, *args, **kwargs) -> None:
+def make_log_print(logger:Logger, status:str = "Train", epoch:tuple = None, timer:float = None, train_metrics:dict = None, test_metrics:dict = None, *args, **kwargs) -> None:
     def _convert_seconds_to_h_m_s(seconds):
         m, s = divmod(seconds, 60)
         h, m = divmod(m, 60)
@@ -120,31 +170,30 @@ def make_log_print(status:str = "Train", epoch:tuple = None, timer:float = None,
         _eta = (_total_epoch - _actual_epoch) * timer/_actual_epoch 
         _eta = _convert_seconds_to_h_m_s(_eta)
 
-    
-    print(f"{_string:=^60}")
+    logger.info(f"{_string:=^60}")
     if train_metrics is not None:
-        print(f"  Training loss {train_metrics['loss']:.3f}, Training accuracy {train_metrics['accuracy']:.3f}, Training f1 {train_metrics['f1']:.3f}")
+        logger.info(f"  Training loss {train_metrics['loss']:.3f}, Training accuracy {train_metrics['accuracy']:.3f}, Training f1 {train_metrics['f1']:.3f}")
     
     if test_metrics is not None:
-        print(f"  Test loss {test_metrics['loss']:.3f}, Test accuracy {test_metrics['accuracy']:.3f}, Test f1 {test_metrics['f1']:.3f}")
+        logger.info(f"  Test loss {test_metrics['loss']:.3f}, Test accuracy {test_metrics['accuracy']:.3f}, Test f1 {test_metrics['f1']:.3f}")
 
     if timer is not None:
-        print(f"  Time elapsed: {_chrono} - ETA: {_eta} - Time per epoch: {timer/_actual_epoch:.2f} seconds")
+        logger.info(f"  Time elapsed: {_chrono} - ETA: {_eta} - Time per epoch: {timer/_actual_epoch:.2f} seconds")
 
     if args is not None:
         for arg in args:
             for k, v in arg.items():
-                print(f"  {k}: {v}")
+                logger.info(f"  {k}: {v}")
 
     if kwargs is not None:
         for k, v in kwargs.items():
-            print(f"  {k}: {v}")
+            logger.info(f"  {k}: {v}")
         
     _string = " End " + status.lower() + " "
     if epoch is not None:
         _string = " End " + status.lower() + " " + str(_actual_epoch) + "/" + str(_total_epoch) + " "
 
-    print(f"{_string:=^60}")
+    logger.info(f"{_string:=^60}")
 
     return
 
@@ -245,7 +294,7 @@ def plot_data(data:dict, title="Loss, Accuracy & F1 Score", save_path:str=None):
     f1_score = (train_data['f1'], test_data['f1'])
 
     # create a subfigure with 2 rows and 3 columns
-    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
+    _ , (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
 
     # plot the data
     ax1.plot(loss[0], label='Train loss')
@@ -270,15 +319,15 @@ def plot_data(data:dict, title="Loss, Accuracy & F1 Score", save_path:str=None):
 # 
 #################################################
 
-from nltk.stem import PorterStemmer
+# from nltk.stem import PorterStemmer
 
-def stem_sentences(sentences):
-    stemmer = PorterStemmer()
-    stemmed_sentences = []
-    for sentence in sentences:
-        stemmed_words = [stemmer.stem(word) for word in sentence.split()]
-        stemmed_sentences.append(' '.join(stemmed_words))
-    return stemmed_sentences
+# def stem_sentences(sentences):
+#     stemmer = PorterStemmer()
+#     stemmed_sentences = []
+#     for sentence in sentences:
+#         stemmed_words = [stemmer.stem(word) for word in sentence.split()]
+#         stemmed_sentences.append(' '.join(stemmed_words))
+#     return stemmed_sentences
 
 def create_word_2_index(sentences):
     word2index = {}
@@ -295,14 +344,14 @@ def create_word_2_index(sentences):
 
     return word2index
 
-def remove_stopwords(sentences:List[str]):
-    # remove stopwords from a list of sentences
-    stop_words = set(stopwords.words('english'))
-    processed_sentences = []
-    for sentence in sentences:
-        processed_sentence = [word for word in sentence.split() if word.lower() not in stop_words]
-        processed_sentences.append(' '.join(processed_sentence))
-    return processed_sentences
+# def remove_stopwords(sentences:List[str]):
+#     # remove stopwords from a list of sentences
+#     stop_words = set(stopwords.words('english'))
+#     processed_sentences = []
+#     for sentence in sentences:
+#         processed_sentence = [word for word in sentence.split() if word.lower() not in stop_words]
+#         processed_sentences.append(' '.join(processed_sentence))
+#     return processed_sentences
 
 def get_subjective_objective_sentences(sentences, classifier:MultinomialNB, vectorizer:CountVectorizer):
     subjective = []

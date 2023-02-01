@@ -1,12 +1,11 @@
-import nltk
 import numpy as np
 
+from sklearn.naive_bayes import MultinomialNB
 from nltk.corpus import movie_reviews, subjectivity
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.naive_bayes import MultinomialNB
 from sklearn.model_selection import StratifiedKFold, cross_validate
 
-from classes.commons import list2str, get_subjective_objective_sentences
+from classes.commons import get_basic_logger, list2str, get_subjective_objective_sentences
 
 # Function to train the subjectivity classifier
 def train_subjectivity_classifier():
@@ -104,8 +103,10 @@ def train_polarity_classifier(subj_classifier, subj_vectorizer):
 
 
 def run_baseline():
+    logger_baseline = get_basic_logger("Baseline")
+
     scores, classifier, vectorizer = train_subjectivity_classifier()
-    print(f"Subjectivity classifier scores: {np.mean(scores):.2f} +- {np.std(scores):.2f}")
+    logger_baseline.info(f"Subjectivity classifier scores: {np.mean(scores):.2f} +- {np.std(scores):.2f}")
     
     scores, classifier, vectorizer = train_polarity_classifier(classifier, vectorizer)
-    print(f"Polarity classifier scores: {np.mean(scores):.2f} +- {np.std(scores):.2f}")
+    logger_baseline.info(f"Polarity classifier scores: {np.mean(scores):.2f} +- {np.std(scores):.2f}")

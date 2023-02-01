@@ -1,16 +1,16 @@
 import os
 import copy
 import time
-from sklearn.model_selection import train_test_split
 import torch
 import numpy as np
 import torch.nn as nn
 
 from torch.utils.data import DataLoader
-from classes.dataset import CustomDataset
-# from classes.model import BiLSTM_CNN_Attention
 from nltk.corpus import movie_reviews, subjectivity
-from classes.commons import create_dataset, create_word_2_index, collate_fn, make_log_print, plot_data, test_single_epoch, train_single_epoch
+from sklearn.model_selection import train_test_split
+
+from classes.dataset import CustomDataset
+from classes.commons import create_word_2_index, collate_fn, make_log_print, plot_data, test_single_epoch, train_single_epoch, get_basic_logger
 
 WEIGHTS_PATH_PAPER = os.path.join('weights', 'bilstm_cnn')
 WEIGHTS_PATH_SUBJECTIVITY = os.path.join(WEIGHTS_PATH_PAPER, 'subjectivity_classification.pt')
@@ -19,6 +19,8 @@ WEIGHTS_PATH_POLARITY = os.path.join(WEIGHTS_PATH_PAPER, 'polarity_classificatio
 PLOTS_PATH_PAPER = os.path.join('plots', 'bilstm_cnn')
 PLOTS_PATH_SUBJECTIVITY = os.path.join(PLOTS_PATH_PAPER, 'subjectivity_train_loss_accuracy_f1.png')
 PLOTS_PATH_POLARITY = os.path.join(PLOTS_PATH_PAPER, 'polarity_train_loss_accuracy_f1.png')
+
+logger_bi_lstm_cnn = get_basic_logger('BiLSTM_CNN')
 
 #################################################
 # Paper implementation
@@ -64,15 +66,15 @@ class BiLSTM_CNN_Attention(nn.Module):
         return out
 
     def save(self, path:str) -> None:
-        print(f"Saving model to '{os.path.abspath(path)}'")
+        logger_bi_lstm_cnn.info(f"Saving model to '{os.path.abspath(path)}'")
         torch.save(self.state_dict(), path)
     
     def load(self, path:str) -> None:
-        print(f"Loading model from '{os.path.abspath(path)}'")
+        logger_bi_lstm_cnn.info(f"Loading model from '{os.path.abspath(path)}'")
         try:
             self.load_state_dict(torch.load(path))
         except RuntimeError:
-            print("[WARNING] Model architecture does not match, loading only weights")
+            logger_bi_lstm_cnn.warning("Model architecture does not match, loading only weights")
             self.load_state_dict(torch.load(path, map_location=torch.device('cpu')))
 
 def paper_make_dirs():
@@ -146,7 +148,7 @@ def paper_train_subjectivity_classification(epochs:int = 30, lr:float = 1e-2, de
             data['test'][key].append(test_metrics[key])
 
         # Print results
-        make_log_print("Train", (epoch+1, epochs), time.time() - start_time, train_metrics, test_metrics)
+        make_log_print(logger_bi_lstm_cnn, "Train", (epoch+1, epochs), time.time() - start_time, train_metrics, test_metrics)
 
         # Save the best model
         if test_metrics['accuracy'] > best_acc:
@@ -158,9 +160,7 @@ def paper_train_subjectivity_classification(epochs:int = 30, lr:float = 1e-2, de
         # Update the scheduler
         # scheduler.step()
 
-    print()
-    make_log_print("Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})
-    print()
+    make_log_print(logger_bi_lstm_cnn, "Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})
 
     # Save the model
     best_model.save(WEIGHTS_PATH_SUBJECTIVITY)
@@ -241,7 +241,7 @@ def paper_train_polarity_classification(epochs: int = 30, lr: float = 1e-3, devi
             data['test'][key].append(test_metrics[key])
 
         # Print results
-        make_log_print("Train", (epoch+1, epochs), time.time() - start_time, train_metrics, test_metrics)
+        make_log_print(logger_bi_lstm_cnn, "Train", (epoch+1, epochs), time.time() - start_time, train_metrics, test_metrics)
 
         # Save the best model
         if test_metrics['accuracy'] > best_acc:
@@ -253,9 +253,7 @@ def paper_train_polarity_classification(epochs: int = 30, lr: float = 1e-3, devi
         # Update the scheduler
         # scheduler.step(test_metrics['loss'])
 
-    print()
-    make_log_print("Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})
-    print()
+    make_log_print(logger_bi_lstm_cnn, "Eval", None, None, None, {'loss': best_loss, 'accuracy': best_acc, 'f1': best_f1})
 
     # Save the model
     best_model.save(WEIGHTS_PATH_POLARITY)
