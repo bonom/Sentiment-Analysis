@@ -1,4 +1,5 @@
 import os
+import sys
 import nltk
 import torch
 import logging
@@ -43,19 +44,18 @@ class CustomFormatter(logging.Formatter):
 def get_basic_logger(name, level=logging.INFO, log_path:str=None) -> logging.Logger:
     logger = logging.getLogger(name)
     logger.setLevel(level)
+    
+    if not 'google.colab' in sys.modules: # Otherwise, the logger will be printed twice
+        formatter = CustomFormatter()
+        ch = logging.StreamHandler()
+        ch.setLevel(level)
+        ch.setFormatter(formatter)
+        logger.addHandler(ch)
 
-    if logger.handlers:
-        logger.handlers = []
-
-    # formatter = CustomFormatter()
-    # ch = logging.StreamHandler()
-    formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(name)s | %(filename)s:%(lineno)d | %(message)s')
+    formatter = logging.Formatter('%(name)s | %(message)s')
     fh = logging.FileHandler(log_path)
-    # ch.setLevel(level)
-    # ch.setFormatter(formatter)
     fh.setLevel(level)
     fh.setFormatter(formatter)
-    # logger.addHandler(ch)
     logger.addHandler(fh)
 
     return logger
