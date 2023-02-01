@@ -295,12 +295,24 @@ def plot_data(data:dict, title="Loss, Accuracy & F1 Score", save_path:str=None):
     # plot the data
     ax1.plot(loss[0], label='Train loss')
     ax1.plot(loss[1], label='Test loss')
+    ax1.set_xlabel('Epoch')
+    ax1.set_ylabel('Loss')
+    ax1.set_title('Loss')
+    ax1.legend()
 
     ax2.plot(accuracy[0], label='Train accuracy')
     ax2.plot(accuracy[1], label='Test accuracy')
+    ax2.set_xlabel('Epoch')
+    ax2.set_ylabel('Accuracy')
+    ax2.set_title('Accuracy')
+    ax2.legend()
 
     ax3.plot(f1_score[0], label='Train f1 score')
     ax3.plot(f1_score[1], label='Test f1 score')
+    ax3.set_xlabel('Epoch')
+    ax3.set_ylabel('F1 Score')
+    ax3.set_title('F1 Score')
+    ax3.legend()
 
     plt.suptitle(title)
     if save_path is not None:
