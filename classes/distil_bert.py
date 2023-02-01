@@ -347,7 +347,7 @@ def run_distil_bert(device: str = 'cpu'):
     make_dirs()
     
     # Train subjectivity classifier with custom implementation
-    # train_subjectivity_classification(device=device)
+    train_subjectivity_classification(device=device)
 
     # Train polarity classifier with custom implementation
     train_polarity_classification(device=device)
