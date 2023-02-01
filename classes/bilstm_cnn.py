@@ -12,13 +12,13 @@ from sklearn.model_selection import train_test_split
 from classes.dataset import CustomDataset
 from classes.commons import create_word_2_index, collate_fn, make_log_print, plot_data, test_single_epoch, train_single_epoch, get_basic_logger
 
-WEIGHTS_PATH_PAPER = os.path.join('weights', 'bilstm_cnn')
-WEIGHTS_PATH_SUBJECTIVITY = os.path.join(WEIGHTS_PATH_PAPER, 'subjectivity_classification.pt')
-WEIGHTS_PATH_POLARITY = os.path.join(WEIGHTS_PATH_PAPER, 'polarity_classification.pt')
+WEIGHTS_PATH_BILSTM_CNN = os.path.join('weights', 'bilstm_cnn')
+WEIGHTS_PATH_SUBJECTIVITY = os.path.join(WEIGHTS_PATH_BILSTM_CNN, 'subjectivity.pt')
+WEIGHTS_PATH_POLARITY = os.path.join(WEIGHTS_PATH_BILSTM_CNN, 'polarity.pt')
 
-PLOTS_PATH_PAPER = os.path.join('plots', 'bilstm_cnn')
-PLOTS_PATH_SUBJECTIVITY = os.path.join(PLOTS_PATH_PAPER, 'subjectivity_train_loss_accuracy_f1.png')
-PLOTS_PATH_POLARITY = os.path.join(PLOTS_PATH_PAPER, 'polarity_train_loss_accuracy_f1.png')
+PLOTS_PATH_BILSTM_CNN = os.path.join('plots', 'bilstm_cnn')
+PLOTS_PATH_SUBJECTIVITY = os.path.join(PLOTS_PATH_BILSTM_CNN, 'subjectivity_loss_accuracy_f1.png')
+PLOTS_PATH_POLARITY = os.path.join(PLOTS_PATH_BILSTM_CNN, 'polarity_loss_accuracy_f1.png')
 
 logger_bi_lstm_cnn = get_basic_logger('BiLSTM_CNN', log_path="Log.txt")
 
@@ -77,13 +77,13 @@ class BiLSTM_CNN_Attention(nn.Module):
             logger_bi_lstm_cnn.warning("Model architecture does not match, loading only weights")
             self.load_state_dict(torch.load(path, map_location=torch.device('cpu')))
 
-def paper_make_dirs():
-    if not os.path.exists(WEIGHTS_PATH_PAPER):
-        os.makedirs(WEIGHTS_PATH_PAPER)
-    if not os.path.exists(PLOTS_PATH_PAPER):
-        os.makedirs(PLOTS_PATH_PAPER)
+def make_dirs():
+    if not os.path.exists(WEIGHTS_PATH_BILSTM_CNN):
+        os.makedirs(WEIGHTS_PATH_BILSTM_CNN)
+    if not os.path.exists(PLOTS_PATH_BILSTM_CNN):
+        os.makedirs(PLOTS_PATH_BILSTM_CNN)
 
-def paper_train_subjectivity_classification(epochs:int = 30, lr:float = 1e-2, device:str = 'cpu') -> nn.Module:
+def train_subjectivity_classification(epochs:int = 30, lr:float = 1e-2, device:str = 'cpu') -> nn.Module:
     """
     Do subjectivity classification using a custom classifier.
     """    
@@ -170,7 +170,7 @@ def paper_train_subjectivity_classification(epochs:int = 30, lr:float = 1e-2, de
     
     return best_model
 
-def paper_train_polarity_classification(epochs: int = 30, lr: float = 1e-3, device: str = 'cpu') -> nn.Module:
+def train_polarity_classification(epochs: int = 30, lr: float = 1e-3, device: str = 'cpu') -> nn.Module:
     """
     Do polarity classification using a trained classifier.
     """
@@ -264,8 +264,10 @@ def paper_train_polarity_classification(epochs: int = 30, lr: float = 1e-3, devi
     return best_model
 
 def run_paper(device: str = 'cpu'):
+    make_dirs()
+
     # Train subjectivity classifier with custom implementation
-    subj_class = paper_train_subjectivity_classification(device=device)
+    train_subjectivity_classification(device=device)
 
     # Train polarity classifier with custom implementation
-    pol_class = paper_train_polarity_classification(device=device)
+    train_polarity_classification(device=device)

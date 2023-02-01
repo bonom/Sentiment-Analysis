@@ -15,12 +15,12 @@ from classes.dataset import CustomDataset
 from classes.commons import get_basic_logger, make_log_print, plot_data, list2str
 
 WEIGHTS_PATH_TRANSFORMER = os.path.join('weights', 'transformer')
-WEIGHTS_PATH_SUBJECTIVITY = os.path.join(WEIGHTS_PATH_TRANSFORMER, 'subjectivity_classification.pt')
-WEIGHTS_PATH_POLARITY = os.path.join(WEIGHTS_PATH_TRANSFORMER, 'polarity_classification.pt')
+WEIGHTS_PATH_SUBJECTIVITY = os.path.join(WEIGHTS_PATH_TRANSFORMER, 'subjectivity.pt')
+WEIGHTS_PATH_POLARITY = os.path.join(WEIGHTS_PATH_TRANSFORMER, 'polarity.pt')
 
 PLOTS_PATH_TRANSFORMER = os.path.join('plots', 'transformer')
-PLOTS_PATH_SUBJECTIVITY = os.path.join(PLOTS_PATH_TRANSFORMER, 'subjectivity_train_loss_accuracy_f1.png')
-PLOTS_PATH_POLARITY = os.path.join(PLOTS_PATH_TRANSFORMER, 'polarity_train_loss_accuracy_f1.png')
+PLOTS_PATH_SUBJECTIVITY = os.path.join(PLOTS_PATH_TRANSFORMER, 'subjectivity_loss_accuracy_f1.png')
+PLOTS_PATH_POLARITY = os.path.join(PLOTS_PATH_TRANSFORMER, 'polarity_loss_accuracy_f1.png')
 
 logger_transformer = get_basic_logger('Transformer', log_path="Log.txt")
 
@@ -344,8 +344,10 @@ def train_polarity_classification(epochs: int = 30, lr: float = 2e-5, device: st
     return best_model
 
 def run_transformer(device: str = 'cpu'):
+    make_dirs()
+    
     # Train subjectivity classifier with custom implementation
-    subj_class = train_subjectivity_classification(device=device)
+    train_subjectivity_classification(device=device)
 
     # Train polarity classifier with custom implementation
-    pol_class = train_polarity_classification(device=device)
+    train_polarity_classification(device=device)

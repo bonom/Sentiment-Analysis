@@ -13,13 +13,13 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from classes.dataset import CustomDataset
 from classes.commons import create_word_2_index, collate_fn, make_log_print, plot_data, test_single_epoch, train_single_epoch, get_basic_logger
 
-WEIGHTS_PATH_CUSTOM = os.path.join('weights', 'bilstm')
-WEIGHTS_PATH_SUBJECTIVITY = os.path.join(WEIGHTS_PATH_CUSTOM, 'subjectivity_classification.pt')
-WEIGHTS_PATH_POLARITY = os.path.join(WEIGHTS_PATH_CUSTOM, 'polarity_classification.pt')
+WEIGHTS_PATH_BILSTM = os.path.join('weights', 'bilstm')
+WEIGHTS_PATH_SUBJECTIVITY = os.path.join(WEIGHTS_PATH_BILSTM, 'subjectivity.pt')
+WEIGHTS_PATH_POLARITY = os.path.join(WEIGHTS_PATH_BILSTM, 'polarity.pt')
 
-PLOTS_PATH_CUSTOM = os.path.join('plots', 'bilstm')
-PLOTS_PATH_SUBJECTIVITY = os.path.join(PLOTS_PATH_CUSTOM, 'subjectivity_train_loss_accuracy_f1.png')
-PLOTS_PATH_POLARITY = os.path.join(PLOTS_PATH_CUSTOM, 'polarity_train_loss_accuracy_f1.png')
+PLOTS_PATH_BILSTM = os.path.join('plots', 'bilstm')
+PLOTS_PATH_SUBJECTIVITY = os.path.join(PLOTS_PATH_BILSTM, 'subjectivity_loss_accuracy_f1.png')
+PLOTS_PATH_POLARITY = os.path.join(PLOTS_PATH_BILSTM, 'polarity_loss_accuracy_f1.png')
 
 logger_bilstm = get_basic_logger('BiLSTM', log_path="Log.txt")
 
@@ -99,10 +99,10 @@ class BiLSTM(nn.Module):
             self.load_state_dict(torch.load(path, map_location=torch.device('cpu')))
 
 def make_dirs():
-    if not os.path.exists(WEIGHTS_PATH_CUSTOM):
-        os.makedirs(WEIGHTS_PATH_CUSTOM)
-    if not os.path.exists(PLOTS_PATH_CUSTOM):
-        os.makedirs(PLOTS_PATH_CUSTOM)
+    if not os.path.exists(WEIGHTS_PATH_BILSTM):
+        os.makedirs(WEIGHTS_PATH_BILSTM)
+    if not os.path.exists(PLOTS_PATH_BILSTM):
+        os.makedirs(PLOTS_PATH_BILSTM)
     
 def train_subjectivity_classification(epochs:int = 30, lr:float = 1e-2,device:str = 'cpu') -> nn.Module:
     """
@@ -288,9 +288,11 @@ def train_polarity_classification(epochs: int = 30, lr: float = 1e-3, device: st
 
     return best_model
 
-def run_custom(device: str = 'cpu'):
+def run_BILSTM(device: str = 'cpu'):
+    make_dirs()
+    
     # Train subjectivity classifier with custom implementation
-    subj_class = train_subjectivity_classification(device=device)
+    train_subjectivity_classification(device=device)
 
     # Train polarity classifier with custom implementation
-    pol_class = train_polarity_classification(device=device)
+    train_polarity_classification(device=device)
