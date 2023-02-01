@@ -10,7 +10,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from classes.dataset import CustomDataset
 from nltk.corpus import movie_reviews, subjectivity
-from transformers import DistilBertForSequenceClassification
+from transformer import DistilBertForSequenceClassification
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from classes.commons import create_word_2_index, collate_fn, make_log_print, plot_data, test_single_epoch, train_single_epoch
 
