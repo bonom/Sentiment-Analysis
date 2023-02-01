@@ -82,7 +82,7 @@ def test_single_epoch(model:nn.Module, test_loader: DataLoader, criterion, devic
     
     with torch.no_grad():
         for sentences, labels, _ in test_loader:
-            # Move to device - No need to move lengths to device since it is needed only on cpu
+            # Move to device
             sentences, labels = sentences.to(device), labels.to(device)
 
             # Forward pass
@@ -286,8 +286,8 @@ def train_polarity_classification(epochs: int = 30, lr: float = 2e-5, device: st
     test_set = CustomDataset(test_set_x, test_set_y)
     
     # Make DataLoader
-    train_loader = DataLoader(train_set, batch_size=32, shuffle=True, collate_fn=collate_fn)
-    test_loader = DataLoader(test_set, batch_size=32, shuffle=True, collate_fn=collate_fn)
+    train_loader = DataLoader(train_set, batch_size=16, shuffle=True, collate_fn=collate_fn)
+    test_loader = DataLoader(test_set, batch_size=16, shuffle=True, collate_fn=collate_fn)
     
     # Initialize DistilBERT model
     model = DistilBertForSequenceClassification.from_pretrained("distilbert-base-uncased")
