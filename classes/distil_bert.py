@@ -8,11 +8,13 @@ import torch.nn as nn
 # from classes.model import LSTM
 from torch.utils.data import DataLoader
 from classes.dataset import CustomDataset
+from torch.nn.utils.rnn import pad_sequence
 from nltk.corpus import movie_reviews, subjectivity
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import train_test_split
-from transformers import DistilBertForSequenceClassification
-from classes.commons import create_word_2_index, collate_fn, make_log_print, plot_data
+from torch.nn.utils.rnn import pack_padded_sequence
+from transformers import DistilBertForSequenceClassification, DistilBertTokenizerFast, AdamW, get_linear_schedule_with_warmup
+from classes.commons import create_word_2_index, make_log_print, plot_data, list2str
 
 WEIGHTS_PATH_TRANSFORMER = os.path.join('weights', 'transformer')
 WEIGHTS_PATH_SUBJECTIVITY = os.path.join(WEIGHTS_PATH_TRANSFORMER, 'subjectivity_classification.pt')
@@ -36,11 +38,11 @@ def train_single_epoch(model:nn.Module, train_loader: DataLoader, optimizer:torc
     train_acc = 0
     train_f1 = 0
     for sentences, labels, _ in train_loader:
-        # Move to device - No need to move lengths to device since it is needed only on cpu
-        sentences, labels = sentences.to(device), labels.to(device)
+        # Move to device
+        sentences, labels, _ = sentences.to(device), labels.to(device), _.to(device)
 
         # Forward pass
-        predictions = model(sentences)
+        predictions = model(sentences).logits[:,0].unsqueeze(1)
 
         # Calculate loss
         loss = criterion(predictions, labels)
@@ -84,7 +86,7 @@ def test_single_epoch(model:nn.Module, test_loader: DataLoader, criterion, devic
             sentences, labels = sentences.to(device), labels.to(device)
 
             # Forward pass
-            predictions = model(sentences)
+            predictions = model(sentences).logits[:,0].unsqueeze(1)
 
             # Calculate loss
             loss = criterion(predictions, labels)
@@ -111,6 +113,53 @@ def test_single_epoch(model:nn.Module, test_loader: DataLoader, criterion, devic
     }
 
 
+def collate_fn(batch):
+    def pad_sequence(sequences, labels, lengths, max_len):
+        # Pad the sequences
+        padded_sequences = torch.zeros(len(sequences), max_len).long()
+        new_seq_append = []
+        new_label_append = []
+        for i, (seq, label) in enumerate(zip(sequences, labels)):
+            seq = seq.squeeze(0)
+            end = lengths[i]
+
+            if end > max_len:
+                divisors = end//max_len
+                end = max_len
+
+                for j in range(1, divisors+1):
+                    _padded_seq = torch.zeros(end).long()
+                    _padded_seq[:end] = seq[end*(j-1):end*j]
+                    new_seq_append.append(_padded_seq)
+                    new_label_append.append(label)
+
+            padded_sequences[i, :end] = seq[:end]
+
+        if len(new_seq_append) > 0:
+            padded_sequences = torch.cat((padded_sequences, torch.stack(new_seq_append)), dim=0)
+            labels = torch.cat((labels, torch.stack(new_label_append)), dim=0)
+        return padded_sequences, labels
+
+    # First sort the batch by the length of the sentences (in descending order)
+    batch.sort(key=lambda x: x[0].shape[1], reverse=True)
+    # Then get the sentences and labels
+    sentences, labels = zip(*batch)
+
+    # Get the lengths of the sentences
+    lengths = [s.shape[1] for s in sentences]
+    max_len = max(lengths)
+
+    if max_len > 512:
+        max_len = 512
+
+    # Convert the labels to a tensor
+    labels = torch.stack(labels).squeeze(1)
+
+    # Pad the sentences
+    new_sentences, new_labels = pad_sequence(sentences, labels, lengths, max_len)
+
+    return new_sentences, new_labels, torch.stack([torch.tensor(l) for l in lengths])
+
     
 def train_subjectivity_classification(epochs:int = 30, lr:float = 2e-5, device:str = 'cpu') -> nn.Module:
     """
@@ -130,14 +179,12 @@ def train_subjectivity_classification(epochs:int = 30, lr:float = 2e-5, device:s
     train_set_x, train_set_y = zip(*train_set)
     test_set_x, test_set_y = zip(*test_set)
 
-    # Make train/test set
-    # Since the classifier is not able to handle strings, we need to convert them to a list of integers
-    # I will use the word2index dictionary to do so
-    word2index = create_word_2_index(train_set_x + test_set_x)
+    # Make Tokenizer
+    tokenizer = DistilBertTokenizerFast.from_pretrained('distilbert-base-uncased')
 
     # Now convert the list of words to a list of integers
-    train_set_x = [[word2index[word] for word in sentence] for sentence in train_set_x]
-    test_set_x = [[word2index[word] for word in sentence] for sentence in test_set_x]
+    train_set_x = [tokenizer.encode(list2str(sentence), return_tensors='pt') for sentence in train_set_x]
+    test_set_x = [tokenizer.encode(list2str(sentence), return_tensors='pt') for sentence in test_set_x]
 
     # I can continue
     train_set = CustomDataset(train_set_x, train_set_y)
@@ -152,7 +199,7 @@ def train_subjectivity_classification(epochs:int = 30, lr:float = 2e-5, device:s
     model = model.to(device)
 
     # Loss function and optimizer
-    criterion = nn.BCELoss()
+    criterion = nn.BCEWithLogitsLoss()
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
 
     # Create variables to store the best model
@@ -227,29 +274,27 @@ def train_polarity_classification(epochs: int = 30, lr: float = 2e-5, device: st
     train_set_x, train_set_y = zip(*train_set)
     test_set_x, test_set_y = zip(*test_set)
 
-    # Make train/test set
-    # Since the classifier is not able to handle strings, we need to convert them to a list of integers
-    # I will use the word2index dictionary to do so
-    word2index = create_word_2_index(train_set_x + test_set_x)
+    # Make Tokenizer
+    tokenizer = DistilBertTokenizerFast.from_pretrained('distilbert-base-uncased')
 
     # Now convert the list of words to a list of integers
-    train_set_x = [[word2index[word] for word in sentence] for sentence in train_set_x]
-    test_set_x = [[word2index[word] for word in sentence] for sentence in test_set_x]
+    train_set_x = [tokenizer.encode(list2str(sentence), return_tensors='pt') for sentence in train_set_x]
+    test_set_x = [tokenizer.encode(list2str(sentence), return_tensors='pt') for sentence in test_set_x]
 
     # I can continue
     train_set = CustomDataset(train_set_x, train_set_y)
     test_set = CustomDataset(test_set_x, test_set_y)
     
-    # Make DataLoader - I had to reduce the batch size to 16 because of memory issues
-    train_loader = DataLoader(train_set, batch_size=128, shuffle=True, collate_fn=collate_fn)
-    test_loader = DataLoader(test_set, batch_size=128, shuffle=True, collate_fn=collate_fn)
+    # Make DataLoader
+    train_loader = DataLoader(train_set, batch_size=32, shuffle=True, collate_fn=collate_fn)
+    test_loader = DataLoader(test_set, batch_size=32, shuffle=True, collate_fn=collate_fn)
     
     # Initialize DistilBERT model
     model = DistilBertForSequenceClassification.from_pretrained("distilbert-base-uncased")
     model = model.to(device)
 
     # Loss function and optimizer
-    criterion = nn.BCELoss()
+    criterion = nn.BCEWithLogitsLoss()
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
 
     # Create variables to store the best model
