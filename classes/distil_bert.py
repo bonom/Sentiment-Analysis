@@ -161,7 +161,7 @@ def collate_fn(batch):
     return new_sentences, new_labels, torch.stack([torch.tensor(l) for l in lengths])
 
     
-def train_subjectivity_classification(epochs:int = 30, lr:float = 2e-5, device:str = 'cpu') -> nn.Module:
+def train_subjectivity_classification(epochs:int = 5, lr:float = 2e-5, device:str = 'cpu') -> nn.Module:
     """
     Do subjectivity classification using a custom classifier.
     """    
