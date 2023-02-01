@@ -20,7 +20,7 @@ PLOTS_PATH_PAPER = os.path.join('plots', 'bilstm_cnn')
 PLOTS_PATH_SUBJECTIVITY = os.path.join(PLOTS_PATH_PAPER, 'subjectivity_train_loss_accuracy_f1.png')
 PLOTS_PATH_POLARITY = os.path.join(PLOTS_PATH_PAPER, 'polarity_train_loss_accuracy_f1.png')
 
-logger_bi_lstm_cnn = get_basic_logger('BiLSTM_CNN')
+logger_bi_lstm_cnn = get_basic_logger('BiLSTM_CNN', log_path="Log.txt")
 
 #################################################
 # Paper implementation

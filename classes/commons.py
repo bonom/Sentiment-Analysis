@@ -50,10 +50,6 @@ def get_basic_logger(name, level=logging.INFO, log_path:str=None) -> logging.Log
     logger.addHandler(ch)
 
     if log_path:
-        par_dir = os.path.dirname(log_path)
-        if not os.path.exists(par_dir):
-            os.makedirs(par_dir)
-
         formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(name)s | %(filename)s:%(lineno)d | %(message)s')
         fh = logging.FileHandler(log_path)
         fh.setLevel(level)
@@ -87,9 +83,7 @@ def check_downloads() -> None:
         nltk.data.find('corpora/subjectivity')
     except LookupError:
         nltk.download('subjectivity')
-
-    print("[OK] All required nltk data downloaded", file=open("Log.txt", "a"))
-
+        
     return 
 
 #################################################
@@ -319,16 +313,6 @@ def plot_data(data:dict, title="Loss, Accuracy & F1 Score", save_path:str=None):
 # 
 #################################################
 
-# from nltk.stem import PorterStemmer
-
-# def stem_sentences(sentences):
-#     stemmer = PorterStemmer()
-#     stemmed_sentences = []
-#     for sentence in sentences:
-#         stemmed_words = [stemmer.stem(word) for word in sentence.split()]
-#         stemmed_sentences.append(' '.join(stemmed_words))
-#     return stemmed_sentences
-
 def create_word_2_index(sentences):
     word2index = {}
     for sentence in sentences:
@@ -343,15 +327,6 @@ def create_word_2_index(sentences):
     word2index["<UNK>"] = len(word2index)
 
     return word2index
-
-# def remove_stopwords(sentences:List[str]):
-#     # remove stopwords from a list of sentences
-#     stop_words = set(stopwords.words('english'))
-#     processed_sentences = []
-#     for sentence in sentences:
-#         processed_sentence = [word for word in sentence.split() if word.lower() not in stop_words]
-#         processed_sentences.append(' '.join(processed_sentence))
-#     return processed_sentences
 
 def get_subjective_objective_sentences(sentences, classifier:MultinomialNB, vectorizer:CountVectorizer):
     subjective = []

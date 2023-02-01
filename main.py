@@ -1,15 +1,15 @@
 #! /usr/bin/env python3
 import torch
 
-from classes.commons import check_downloads, get_basic_logger
 from classes.baseline import run_baseline
-
 from classes.bilstm import run_custom 
 from classes.bilstm_cnn import run_paper
 from classes.distil_bert import run_transformer
 
+from classes.commons import check_downloads, get_basic_logger
+
 if __name__ == '__main__':
-    logger_main = get_basic_logger("Main")
+    logger_main = get_basic_logger("Main", log_path="Log.txt")
 
     check_downloads()
     # Hyperparameters

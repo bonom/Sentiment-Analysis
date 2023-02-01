@@ -1,17 +1,17 @@
 import os
 import copy
 import time
-from sklearn.model_selection import train_test_split
 import torch
 import numpy as np
 import torch.nn as nn
 
-# from classes.model import LSTM
 from torch.utils.data import DataLoader
-from classes.dataset import CustomDataset
 from nltk.corpus import movie_reviews, subjectivity
+from sklearn.model_selection import train_test_split
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
-from classes.commons import create_dataset, create_word_2_index, collate_fn, make_log_print, plot_data, test_single_epoch, train_single_epoch, get_basic_logger
+
+from classes.dataset import CustomDataset
+from classes.commons import create_word_2_index, collate_fn, make_log_print, plot_data, test_single_epoch, train_single_epoch, get_basic_logger
 
 WEIGHTS_PATH_CUSTOM = os.path.join('weights', 'bilstm')
 WEIGHTS_PATH_SUBJECTIVITY = os.path.join(WEIGHTS_PATH_CUSTOM, 'subjectivity_classification.pt')
@@ -21,7 +21,7 @@ PLOTS_PATH_CUSTOM = os.path.join('plots', 'bilstm')
 PLOTS_PATH_SUBJECTIVITY = os.path.join(PLOTS_PATH_CUSTOM, 'subjectivity_train_loss_accuracy_f1.png')
 PLOTS_PATH_POLARITY = os.path.join(PLOTS_PATH_CUSTOM, 'polarity_train_loss_accuracy_f1.png')
 
-logger_bilstm = get_basic_logger('BiLSTM')
+logger_bilstm = get_basic_logger('BiLSTM', log_path="Log.txt")
 
 class Attention(nn.Module):
     def __init__(self, hidden_size:int):
